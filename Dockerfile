@@ -22,11 +22,8 @@ COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --profile ${BUILD_MODE} --workspace --recipe-path recipe.json --target x86_64-unknown-linux-musl
 
-COPY ./prisma-cli ./prisma-cli
-COPY ./prisma ./prisma
-RUN cargo run --bin prisma -p prisma-cli -- generate
-
 COPY . .
+RUN cargo run --bin prisma -p prisma-cli -- generate
 RUN cargo build --profile ${BUILD_MODE} --bin ozb --target x86_64-unknown-linux-musl
 
 FROM alpine:latest AS runtime
