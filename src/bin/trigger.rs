@@ -48,6 +48,7 @@ async fn main() -> Result<(), Error> {
 
             log::info!("[{}] new deal: {}, {}", event.payload.id, title, link);
 
+            // todo: add regex support
             for data in active_keywords {
                 let keyword = data.keyword.to_lowercase();
                 if title.to_lowercase().contains(&keyword)
