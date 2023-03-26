@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  ozb-bot:
+    build:
+      context: .
+      args:
+        BUILD_MODE: dev
+        BUILD_DIRECTORY: debug
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+    container_name: ozb-bot
+
+  ozbd:
+    build:
+      context: .
+      args:
+        BUILD_MODE: dev
+        BUILD_DIRECTORY: debug
+    command: --daemon
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+    container_name: ozbd
