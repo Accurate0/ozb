@@ -89,7 +89,7 @@ jobs:
 
       - name: create zip
         run: |
-          mv ./ozb ./bootstrap
+          mv ./trigger ./bootstrap
           zip -r bootstrap.zip ./bootstrap
 
       - name: deploy Trigger
