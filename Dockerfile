@@ -24,7 +24,7 @@ RUN cargo chef cook --profile ${BUILD_MODE} --workspace --recipe-path recipe.jso
 
 COPY ./prisma-cli ./
 COPY ./prisma ./
-RUN cargo run -p prisma-cli -- generate
+RUN cargo run --bin prisma -p prisma-cli -- generate
 
 COPY . .
 RUN ls && echo 213132 && cat Cargo.toml
