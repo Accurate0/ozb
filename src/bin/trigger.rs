@@ -46,7 +46,7 @@ async fn main() -> Result<(), Error> {
             let link = event.payload.detail.full_document.link;
             let thumbnail = event.payload.detail.full_document.thumbnail;
 
-            log::info!("new deal: {}, {}", title, link);
+            log::info!("[{}] new deal: {}, {}", event.payload.id, title, link);
 
             for data in active_keywords {
                 let keyword = data.keyword;
