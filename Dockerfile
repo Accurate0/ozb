@@ -27,6 +27,7 @@ COPY ./prisma ./
 RUN cargo run -p prisma-cli -- generate
 
 COPY . .
+RUN ls && echo 213132 && cat Cargo.toml
 RUN cargo build --profile ${BUILD_MODE} --bin ozb --target x86_64-unknown-linux-musl
 
 FROM alpine:latest AS runtime

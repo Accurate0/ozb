@@ -38,6 +38,12 @@ lambda_runtime = "0.7.3"
 lambda_http = "0.7.3"
 chrono-tz = "0.8.1"
 
+[[bin]]
+name = "ozb"
+
+[[bin]]
+name = "trigger"
+
 [lib]
 name = "ozb"
 path = "src/lib.rs"
