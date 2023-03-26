@@ -40,9 +40,11 @@ chrono-tz = "0.8.1"
 
 [[bin]]
 name = "ozb"
+path = "src/bin/ozb.rs"
 
 [[bin]]
 name = "trigger"
+path = "src/bin/trigger.rs"
 
 [lib]
 name = "ozb"
