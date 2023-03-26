@@ -34,7 +34,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: aws ecs update-service --region ap-southeast-2 --cluster default-cluster --service ozb-service --force-new-deployment 2>&1 1>/dev/null
 
- build-lambda:
+  build-lambda:
     runs-on: ubuntu-latest
     steps:
       - name: install musl gcc
