@@ -50,9 +50,9 @@ async fn main() -> Result<(), Error> {
 
             // todo: add regex support
             for data in active_keywords {
-                let keyword = data.keyword.to_lowercase();
-                if title.to_lowercase().contains(&keyword)
-                    || description.to_lowercase().contains(&keyword)
+                let keyword = data.keyword.to_ascii_lowercase();
+                if title.to_ascii_lowercase().contains(&keyword)
+                    || description.to_ascii_lowercase().contains(&keyword)
                 {
                     let embed = EmbedBuilder::default()
                         .color(0xde935f)
