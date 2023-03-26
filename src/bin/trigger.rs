@@ -55,6 +55,7 @@ async fn run(event: LambdaEvent<MongoDbPayload>) -> Result<(), anyhow::Error> {
         let keyword = data.keyword;
         if title.contains(&keyword) || description.contains(&keyword) {
             let embed = EmbedBuilder::default()
+                .color(0xde935f)
                 .title("OzBargain")
                 .field(EmbedFieldBuilder::new("Link", link.clone()))
                 .field(EmbedFieldBuilder::new("Keyword", keyword.clone()))
