@@ -92,5 +92,5 @@ jobs:
           mv ./trigger ./bootstrap
           zip -r bootstrap.zip ./bootstrap
 
-      - name: deploy Trigger
+      - name: deploy trigger
         run: aws lambda update-function-code --function-name Ozb-Trigger --zip-file fileb://bootstrap.zip --region ap-southeast-2
