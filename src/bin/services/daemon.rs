@@ -113,7 +113,7 @@ pub async fn run_ozbd(config: ApplicationConfig) -> Result<(), anyhow::Error> {
         .await
         {
             Ok(result) => match result {
-                Ok(result) => etag = result,
+                Ok(response_etag) => etag = response_etag,
                 Err(e) => log::error!("error with ozbargain: {}", e),
             },
             Err(e) => {
