@@ -107,6 +107,8 @@ async fn handle_unregister_keywords(
     ctx: &SlashContext<Arc<BotContext>>,
     #[autocomplete(autocomplete_existing_keywords)]
     #[description = "what u want"]
+    // todo: fix this, it can be any option id, regardless of who placed it
+    // but that requires knowing the db key (good for me?)
     option_id: String,
 ) -> DefaultCommandResult {
     ctx.acknowledge().await?;
