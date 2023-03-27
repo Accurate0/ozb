@@ -73,7 +73,7 @@ async fn main() -> Result<(), Error> {
             let thumbnail = event.payload.detail.full_document.thumbnail;
 
             log::info!("[{}] new deal: {}, {}", event.payload.id, title, link);
-            log::info!("description: {}", description);
+            log::info!("description: {}", description.replace('\n', ""));
 
             // todo: add regex support
             for data in active_keywords {
@@ -84,6 +84,7 @@ async fn main() -> Result<(), Error> {
                     let embed = EmbedBuilder::default()
                         .color(0xde935f)
                         .title("OzBargain")
+                        .field(EmbedFieldBuilder::new("Title", title.clone()))
                         .field(EmbedFieldBuilder::new("Link", link.clone()))
                         .field(EmbedFieldBuilder::new("Keyword", keyword.clone()))
                         .field(EmbedFieldBuilder::new(
