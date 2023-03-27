@@ -81,6 +81,7 @@ async fn main() -> Result<(), Error> {
                 if title.to_ascii_lowercase().contains(&keyword)
                     || description.to_ascii_lowercase().contains(&keyword)
                 {
+                    log::info!("triggered for {} [{}]", keyword, data.user_id);
                     let embed = EmbedBuilder::default()
                         .color(0xde935f)
                         .title("OzBargain")
