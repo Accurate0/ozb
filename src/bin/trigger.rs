@@ -7,6 +7,7 @@ use ozb::{
     prisma,
     types::{ApplicationConfig, MongoDbPayload},
 };
+use tl::{Bytes, ParserOptions};
 use twilight_http::Client as DiscordHttpClient;
 use twilight_model::{channel::message::AllowedMentions, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
@@ -31,7 +32,7 @@ async fn main() -> Result<(), Error> {
         .await?
         .try_deserialize::<ApplicationConfig>()?;
     let discord_http = &DiscordHttpClient::new(config.discord_token.to_owned());
-    let prisma_client = &(prisma::new_client_with_url(&config.mongodb_connection_string).await?);
+    let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
 
     lambda_runtime::run(service_fn(
         move |event: LambdaEvent<MongoDbPayload>| async move {
@@ -43,6 +44,32 @@ async fn main() -> Result<(), Error> {
 
             let title = event.payload.detail.full_document.title;
             let description = event.payload.detail.full_document.description;
+
+            let description = tl::parse(&description, ParserOptions::default())
+                .map(|dom| {
+                    let mut string_list = Vec::new();
+                    for node in dom.nodes() {
+                        if let Some(tag) = node.as_tag() {
+                            if tag.name() == "img" {
+                                string_list.push(
+                                    tag.attributes()
+                                        .get("alt")
+                                        .unwrap_or(None)
+                                        .unwrap_or(&Bytes::from(""))
+                                        .as_utf8_str()
+                                        .to_string(),
+                                )
+                            }
+                        };
+
+                        string_list.push(node.inner_text(dom.parser()).to_string())
+                    }
+
+                    string_list.join("\n")
+                })
+                .unwrap_or(description);
+
+            log::info!("{}", description);
             let link = event.payload.detail.full_document.link;
             let thumbnail = event.payload.detail.full_document.thumbnail;
 

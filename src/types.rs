@@ -11,7 +11,12 @@ pub struct ApplicationConfig {
     #[serde(rename = "DiscordAuthToken")]
     pub discord_token: String,
 
+    #[cfg(not(debug_assertions))]
     #[serde(rename = "MongoDbConnectionString")]
+    pub mongodb_connection_string: String,
+
+    #[cfg(debug_assertions)]
+    #[serde(rename = "MongoDbConnectionString-dev")]
     pub mongodb_connection_string: String,
 }
 
