@@ -69,11 +69,11 @@ async fn main() -> Result<(), Error> {
                 })
                 .unwrap_or(description);
 
-            log::info!("{}", description);
             let link = event.payload.detail.full_document.link;
             let thumbnail = event.payload.detail.full_document.thumbnail;
 
             log::info!("[{}] new deal: {}, {}", event.payload.id, title, link);
+            log::info!("description: {}", description);
 
             // todo: add regex support
             for data in active_keywords {
