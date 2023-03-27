@@ -15,13 +15,7 @@ use zephyrus::twilight_exports::ChannelMarker;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    foundation::log::init_logger(
-        log::LevelFilter::Info,
-        &[
-            "twilight_http_ratelimiting::in_memory::bucket",
-            "twilight_gateway::shard",
-        ],
-    );
+    foundation::log::init_logger(log::LevelFilter::Info, &[]);
     let shared_config = aws::config::get_shared_config().await;
     let secrets = aws_sdk_secretsmanager::Client::new(&shared_config);
     let secret_manager_source = SecretsManagerSource::new("Ozb-", secrets);
@@ -72,7 +66,8 @@ async fn main() -> Result<(), Error> {
             let link = event.payload.detail.full_document.link;
             let thumbnail = event.payload.detail.full_document.thumbnail;
 
-            log::info!("[{}] new deal: {}, {}", event.payload.id, title, link);
+            log::info!("[new deal] id: {}", event.payload.id);
+            log::info!("title: {}, {}", title, link);
             log::info!("description: {}", description.replace('\n', ""));
 
             // todo: add regex support
