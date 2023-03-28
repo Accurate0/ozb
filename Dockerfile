@@ -8,7 +8,6 @@ WORKDIR /app
 FROM chef AS planner
 
 COPY Cargo.* ./
-COPY prisma-cli/Cargo.toml ./prisma-cli/Cargo.toml
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -23,7 +22,7 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --profile ${BUILD_MODE} --workspace --recipe-path recipe.json --target x86_64-unknown-linux-musl
 
 COPY . .
-RUN cargo run --bin prisma -p prisma-cli -- generate
+RUN cargo prisma generate
 RUN cargo build --profile ${BUILD_MODE} --bin ozb --target x86_64-unknown-linux-musl
 
 FROM alpine:latest AS runtime

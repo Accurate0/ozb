@@ -33,6 +33,7 @@ tracing = "0.1.37"
 config = "0.13.3"
 rss = "2.0.2"
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.6", features = ["mongodb"] }
+prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.6", features = ["mongodb"] }
 chrono = "0.4.24"
 lambda_runtime = "0.7.3"
 lambda_http = "0.7.3"
@@ -47,14 +48,13 @@ path = "src/bin/ozb.rs"
 name = "trigger"
 path = "src/bin/trigger.rs"
 
+[[bin]]
+name = "prisma"
+path = "src/bin/prisma.rs"
+
 [lib]
 name = "ozb"
 path = "src/lib.rs"
-
-[workspace]
-members = [
-    "prisma-cli",
-]
 
 [profile.release-strip]
 inherits = "release"

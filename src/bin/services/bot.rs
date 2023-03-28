@@ -114,7 +114,7 @@ async fn handle_unregister_keywords(
     ctx.acknowledge().await?;
 
     let prisma_client = &ctx.data.prisma_client;
-    prisma_client
+    let deleted_item = prisma_client
         .registered_keywords()
         .delete(UniqueWhereParam::IdEquals(option_id))
         .exec()
@@ -122,8 +122,10 @@ async fn handle_unregister_keywords(
 
     ctx.interaction_client
         .create_followup(&ctx.interaction.token)
-        .content("Removed as keyword for search")?
-        .flags(MessageFlags::EPHEMERAL)
+        .content(&format!(
+            "Removed \"{}\" as keyword for search",
+            deleted_item.keyword
+        ))?
         .await?;
 
     Ok(())

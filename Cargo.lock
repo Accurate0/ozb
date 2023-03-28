@@ -3851,6 +3851,7 @@ dependencies = [
  "log",
  "openssl",
  "prisma-client-rust",
+ "prisma-client-rust-cli",
  "redis",
  "reqwest",
  "reqwest-middleware",
@@ -4200,13 +4201,6 @@ dependencies = [
  "diff",
  "output_vt100",
  "yansi",
-]
-
-[[package]]
-name = "prisma-cli"
-version = "0.1.0"
-dependencies = [
- "prisma-client-rust-cli",
 ]
 
 [[package]]
