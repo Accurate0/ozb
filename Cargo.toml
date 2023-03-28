@@ -40,13 +40,18 @@ lambda_http = "0.7.3"
 chrono-tz = "0.8.1"
 tl = "0.7.7"
 
+[features]
+prisma = []
+
 [[bin]]
 name = "ozb"
 path = "src/bin/ozb.rs"
+required-features = ["prisma"]
 
 [[bin]]
 name = "trigger"
 path = "src/bin/trigger.rs"
+required-features = ["prisma"]
 
 [[bin]]
 name = "prisma"

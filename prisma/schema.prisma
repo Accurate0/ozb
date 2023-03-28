@@ -4,7 +4,7 @@ datasource db {
 }
 
 generator client {
-    provider = "cargo prisma generate"
+    provider = "cargo run --bin prisma -- generate"
     output   = "../src/prisma.rs"
 }
 
