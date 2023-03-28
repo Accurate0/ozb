@@ -57,7 +57,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: generate prisma client
-        run: cargo run --bin prisma -p prisma-cli -- generate
+        run: cargo run --bin prisma -- generate
 
       - name: cargo build
         run: cargo build --locked --profile release-strip --target x86_64-unknown-linux-musl --bin trigger
