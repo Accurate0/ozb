@@ -26,3 +26,8 @@ model RegisteredKeywords {
     user_id    String
     channel_id String
 }
+
+model TriggerIds {
+    id     String @id @default(auto()) @map("_id") @db.ObjectId
+    postId String @unique
+}

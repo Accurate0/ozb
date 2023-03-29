@@ -44,10 +44,8 @@ pub struct MongoDbPayload {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Detail {
-    pub txn_number: i64,
-    pub lsid: Lsid,
     #[serde(rename = "_id")]
-    pub id: Id2,
+    pub id: Id,
     pub operation_type: String,
     pub cluster_time: ClusterTime,
     pub full_document: FullDocument,
@@ -57,32 +55,7 @@ pub struct Detail {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Lsid {
-    pub id: Id,
-    pub uid: Uid,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct Id {
-    #[serde(rename = "Subtype")]
-    pub subtype: i64,
-    #[serde(rename = "Data")]
-    pub data: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Uid {
-    #[serde(rename = "Subtype")]
-    pub subtype: i64,
-    #[serde(rename = "Data")]
-    pub data: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Id2 {
     #[serde(rename = "_data")]
     pub data: String,
 }
@@ -101,13 +74,8 @@ pub struct ClusterTime {
 pub struct FullDocument {
     #[serde(rename = "_id")]
     pub id: String,
-    pub added_at: String,
-    pub ozb_id: String,
-    pub title: String,
-    pub publication_date: String,
-    pub link: String,
-    pub description: String,
-    pub thumbnail: Option<String>,
+    #[serde(rename = "postId")]
+    pub post_id: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

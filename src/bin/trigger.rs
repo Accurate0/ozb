@@ -4,7 +4,7 @@ use foundation::{aws, config::sources::secret_manager::SecretsManagerSource};
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
-    prisma,
+    prisma::{self, posts::UniqueWhereParam},
     types::{ApplicationConfig, MongoDbPayload},
 };
 use tl::{Bytes, ParserOptions};
@@ -30,14 +30,25 @@ async fn main() -> Result<(), Error> {
 
     lambda_runtime::run(service_fn(
         move |event: LambdaEvent<MongoDbPayload>| async move {
+            let document_id = event.payload.detail.full_document.post_id;
+            let full_document = prisma_client
+                .posts()
+                .find_unique(UniqueWhereParam::IdEquals(document_id.clone()))
+                .exec()
+                .await?
+                .ok_or(anyhow::Error::msg(format!(
+                    "document {}: not found",
+                    document_id
+                )))?;
+
             let active_keywords = prisma_client
                 .registered_keywords()
                 .find_many(vec![])
                 .exec()
                 .await?;
 
-            let title = event.payload.detail.full_document.title;
-            let description = event.payload.detail.full_document.description;
+            let title = full_document.title;
+            let description = full_document.description;
 
             let description = tl::parse(&description, ParserOptions::default())
                 .map(|dom| {
@@ -63,8 +74,8 @@ async fn main() -> Result<(), Error> {
                 })
                 .unwrap_or(description);
 
-            let link = event.payload.detail.full_document.link;
-            let thumbnail = event.payload.detail.full_document.thumbnail;
+            let link = full_document.link;
+            let thumbnail = full_document.thumbnail;
 
             log::info!("[new deal] id: {}", event.payload.id);
             log::info!("title: {}, {}", title, link);

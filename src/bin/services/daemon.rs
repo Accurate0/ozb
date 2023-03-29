@@ -7,7 +7,7 @@ use ozb::{
     prisma::{
         self,
         posts::{thumbnail, UniqueWhereParam},
-        PrismaClient,
+        trigger_ids, PrismaClient,
     },
     types::ApplicationConfig,
 };
@@ -76,7 +76,7 @@ async fn fetch_deals(
                 .to_owned())
         };
 
-        client
+        let added = client
             .posts()
             .upsert(
                 UniqueWhereParam::OzbIdEquals(guid.clone()),
@@ -89,6 +89,17 @@ async fn fetch_deals(
                     vec![thumbnail::set(thumbnail().ok())],
                 ),
                 vec![thumbnail::set(thumbnail().ok())],
+            )
+            .exec()
+            .await?;
+
+        // this is the actual trigger
+        client
+            .trigger_ids()
+            .upsert(
+                trigger_ids::UniqueWhereParam::PostIdEquals(added.id.clone()),
+                (added.id, vec![]),
+                vec![],
             )
             .exec()
             .await?;
