@@ -32,3 +32,12 @@ model TriggerIds {
     postId  String    @unique
     addedAt DateTime? @default(now())
 }
+
+model AuditEntries {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+
+    triggeredAt DateTime @default(now())
+
+    post    Json
+    keyword Json
+}

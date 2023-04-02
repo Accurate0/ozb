@@ -47,10 +47,10 @@ async fn main() -> Result<(), Error> {
                 .exec()
                 .await?;
 
-            let title = full_document.title;
-            let description = full_document.description;
+            let title = &full_document.title;
+            let description = &full_document.description;
 
-            let description = tl::parse(&description, ParserOptions::default())
+            let description = tl::parse(description, ParserOptions::default())
                 .map(|dom| {
                     let mut string_list = Vec::new();
                     for node in dom.nodes() {
@@ -72,10 +72,10 @@ async fn main() -> Result<(), Error> {
 
                     string_list.join("\n")
                 })
-                .unwrap_or(description);
+                .unwrap_or(description.to_owned());
 
-            let link = full_document.link;
-            let thumbnail = full_document.thumbnail;
+            let link = &full_document.link;
+            let thumbnail = &full_document.thumbnail;
 
             log::info!("[new deal] id: {}", event.payload.id);
             log::info!("title: {}, {}", title, link);
@@ -116,6 +116,16 @@ async fn main() -> Result<(), Error> {
                         .embeds(&[embed.build()])?
                         .allowed_mentions(Some(&allowed_mentions))
                         .content(&format!("<@{}>", data.user_id))?
+                        .await?;
+
+                    prisma_client
+                        .audit_entries()
+                        .create(
+                            serde_json::to_value(full_document.clone())?,
+                            serde_json::to_value(data)?,
+                            vec![],
+                        )
+                        .exec()
                         .await?;
                 }
             }
