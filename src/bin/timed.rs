@@ -4,7 +4,11 @@ use foundation::{aws, config::sources::secret_manager::SecretsManagerSource};
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
-    prisma::{self, posts, read_filters::DateTimeFilter},
+    prisma::{
+        self, posts,
+        read_filters::{DateTimeFilter, DateTimeNullableFilter},
+        trigger_ids,
+    },
     types::ApplicationConfig,
 };
 use serde_json::Value;
@@ -28,15 +32,29 @@ async fn main() -> Result<(), Error> {
             .checked_sub_days(Days::new(14))
             .ok_or(anyhow::Error::msg("Day not in range?"))?;
 
-        let deleted = prisma_client
+        let deleted_posts = prisma_client
             .posts()
-            .find_many(vec![posts::WhereParam::AddedAt(DateTimeFilter::Lt(
+            .delete_many(vec![posts::WhereParam::AddedAt(DateTimeFilter::Lt(
                 datetime_2_weeks_ago.into(),
             ))])
             .exec()
             .await?;
 
-        log::info!("deleted {:#?} entries", deleted);
+        let deleted_trigger_ids = prisma_client
+            .trigger_ids()
+            .delete_many(vec![trigger_ids::WhereParam::AddedAt(
+                DateTimeNullableFilter::Lt(datetime_2_weeks_ago.into()),
+            )])
+            .exec()
+            .await?;
+
+        // TODO: audit entries export off mongo, to S3 or dynamo?
+
+        log::info!(
+            "deleted {} posts, {} trigger ids",
+            deleted_posts,
+            deleted_trigger_ids
+        );
 
         Ok::<(), Error>(())
     }))
