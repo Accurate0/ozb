@@ -54,6 +54,11 @@ path = "src/bin/trigger.rs"
 required-features = ["prisma"]
 
 [[bin]]
+name = "timed"
+path = "src/bin/timed.rs"
+required-features = ["prisma"]
+
+[[bin]]
 name = "prisma"
 path = "src/bin/prisma.rs"
 
