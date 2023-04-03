@@ -28,6 +28,8 @@ async fn main() -> Result<(), Error> {
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
 
     lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| async move {
+        // keep last 2 weeks of content, anything less than should be removed
+        // matches how long logs are kept
         let datetime_2_weeks_ago = chrono::Utc::now()
             .checked_sub_days(Days::new(14))
             .ok_or(anyhow::Error::msg("Day not in range?"))?;
