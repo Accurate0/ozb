@@ -75,7 +75,7 @@ jobs:
           path: ./ozb
 
   deploy-lambda:
-    needs: [build-lambda, deploy-ecs]
+    needs: [build-lambda, build-container]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
