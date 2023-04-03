@@ -23,7 +23,7 @@ RUN cargo chef cook --profile ${BUILD_MODE} --bin prisma --recipe-path recipe.js
 
 COPY ./prisma /app/prisma
 COPY ./src/bin/prisma.rs /app/src/bin/
-RUN cargo run --bin prisma -- generate
+RUN cargo run --profile ${BUILD_MODE} --target x86_64-unknown-linux-musl --bin prisma -- generate
 
 COPY . .
 RUN cargo build --profile ${BUILD_MODE} --features="prisma" --bin ozb --target x86_64-unknown-linux-musl
