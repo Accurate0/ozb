@@ -16,6 +16,18 @@ use redis::AsyncCommands;
 use reqwest::ClientBuilder;
 use serde_json::Value;
 
+macro_rules! skip_option {
+    ($res:expr, $item:literal) => {
+        match $res {
+            Some(val) => val,
+            None => {
+                log::warn!("skipping loop because {} missing", $item);
+                continue;
+            }
+        }
+    };
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     foundation::log::init_logger(log::LevelFilter::Info, &[]);
@@ -75,20 +87,21 @@ async fn main() -> Result<(), Error> {
         let channel = rss::Channel::read_from(&response[..])?;
 
         for item in channel.items() {
-            let guid = item
-                .guid()
-                .unwrap()
+            let guid = skip_option!(item.guid(), "guid")
                 .value()
                 .split_ascii_whitespace()
-                .next()
-                .unwrap()
-                .to_owned();
-            let title = item.title().unwrap().to_owned();
+                .next();
+
+            let guid = skip_option!(guid, "guid whitespace").to_owned();
+
+            let title = skip_option!(item.title(), "title").to_owned();
             // Sun, 26 Mar 2023 17:29:29 +1100
-            let publication_date =
-                DateTime::parse_from_str(item.pub_date().unwrap(), "%a, %d %b %Y %T %z")?;
-            let link = item.link().unwrap().to_owned();
-            let description = item.description().unwrap().to_owned();
+            let publication_date = DateTime::parse_from_str(
+                skip_option!(item.pub_date(), "publication date"),
+                "%a, %d %b %Y %T %z",
+            )?;
+            let link = skip_option!(item.link(), "link").to_owned();
+            let description = skip_option!(item.description(), "description").to_owned();
             let ext = item.extensions();
             let thumbnail = || -> Result<String, anyhow::Error> {
                 Ok(ext
