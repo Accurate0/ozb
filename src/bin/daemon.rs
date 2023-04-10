@@ -104,6 +104,7 @@ async fn main() -> Result<(), Error> {
                     .to_owned())
             };
 
+            log::info!("inserting: {} - {} - {}", guid, title, link);
             let added = prisma_client
                 .posts()
                 .upsert(
