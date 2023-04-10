@@ -1,4 +1,4 @@
-use crate::services::{bot::run_discord_bot, daemon::run_ozbd};
+use crate::services::bot::run_discord_bot;
 use config::{Config, Environment};
 use foundation::{aws, config::sources::secret_manager::SecretsManagerSource};
 use ozb::types::ApplicationConfig;
@@ -7,7 +7,6 @@ mod services;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let is_daemon = std::env::args().any(|a| a == "--daemon");
     foundation::log::init_logger(
         log::LevelFilter::Info,
         &[
@@ -15,7 +14,6 @@ async fn main() -> anyhow::Result<()> {
             "twilight_gateway::shard",
         ],
     );
-    log::info!("daemon process: {}", is_daemon);
 
     let shared_config = aws::config::get_shared_config().await;
     let secrets = aws_sdk_secretsmanager::Client::new(&shared_config);
@@ -28,11 +26,7 @@ async fn main() -> anyhow::Result<()> {
         .await?
         .try_deserialize::<ApplicationConfig>()?;
 
-    if is_daemon {
-        run_ozbd(config).await?
-    } else {
-        run_discord_bot(config).await?
-    }
+    run_discord_bot(config).await?;
 
     Ok(())
 }

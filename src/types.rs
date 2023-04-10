@@ -18,6 +18,9 @@ pub struct ApplicationConfig {
     #[cfg(debug_assertions)]
     #[serde(rename = "MongoDbConnectionString-dev")]
     pub mongodb_connection_string: String,
+
+    #[serde(rename = "RedisConnectionString")]
+    pub redis_connection_string: String,
 }
 
 #[derive(Debug)]

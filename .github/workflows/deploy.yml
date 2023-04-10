@@ -60,13 +60,14 @@ jobs:
         run: cargo run --locked --profile release-strip --target x86_64-unknown-linux-musl --bin prisma -- generate
 
       - name: cargo build
-        run: cargo build --locked --profile release-strip --target x86_64-unknown-linux-musl --features="prisma" --bin trigger --bin timed
+        run: cargo build --locked --profile release-strip --target x86_64-unknown-linux-musl --features="prisma" --bin trigger --bin timed --bin daemon
 
       - name: copy artifacts
         run: |
           mkdir ./ozb
           cp ./target/x86_64-unknown-linux-musl/release-strip/trigger ./ozb/Trigger
           cp ./target/x86_64-unknown-linux-musl/release-strip/timed ./ozb/Timed
+          cp ./target/x86_64-unknown-linux-musl/release-strip/daemon ./ozb/daemon
 
       - name: upload artifact
         uses: actions/upload-artifact@v3
@@ -83,6 +84,7 @@ jobs:
         task:
           - Trigger
           - Timed
+          - Daemon
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

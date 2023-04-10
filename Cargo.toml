@@ -28,7 +28,12 @@ foundation = { git = "https://github.com/Accurate0/foundation.git", features = [
     "http",
 ] }
 zephyrus = "0.9.0"
-redis = { version = "0.23.0", features = ["aio", "tokio-comp"] }
+redis = { version = "0.23.0", features = [
+    "aio",
+    "tokio-comp",
+    "tokio-rustls-comp",
+    "connection-manager",
+] }
 aws-sdk-secretsmanager = "0.25.1"
 aws-sdk-dynamodb = "0.25.1"
 serde_dynamo = { version = "4.2.0", features = ["aws-sdk-dynamodb+0_24"] }
@@ -63,6 +68,11 @@ required-features = ["prisma"]
 [[bin]]
 name = "timed"
 path = "src/bin/timed.rs"
+required-features = ["prisma"]
+
+[[bin]]
+name = "daemon"
+path = "src/bin/daemon.rs"
 required-features = ["prisma"]
 
 [[bin]]
