@@ -12,33 +12,10 @@ use ozb::{
     prisma::{self, posts, trigger_ids},
     types::ApplicationConfig,
 };
+use ozb::{skip_option, skip_result};
 use redis::AsyncCommands;
 use reqwest::ClientBuilder;
 use serde_json::Value;
-
-macro_rules! skip_option {
-    ($res:expr, $item:literal) => {
-        match $res {
-            Some(val) => val,
-            None => {
-                log::warn!("skipping loop because {} missing", $item);
-                continue;
-            }
-        }
-    };
-}
-
-macro_rules! skip_result {
-    ($res:expr, $item:literal) => {
-        match $res {
-            Ok(val) => val,
-            Err(e) => {
-                log::warn!("skipping loop because {} missing, error: {}", $item, e);
-                continue;
-            }
-        }
-    };
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
