@@ -67,7 +67,10 @@ async fn main() -> Result<(), Error> {
 
             if let Some(etag) = etag {
                 if let Some(mut redis) = redis {
-                    redis.set(key, etag).await?
+                    match redis.set::<_, _, ()>(key, etag).await {
+                        Ok(_) => {}
+                        Err(e) => log::error!("error setting redis key: {}", e),
+                    };
                 }
             };
         }
