@@ -67,7 +67,7 @@ jobs:
           mkdir ./ozb
           cp ./target/x86_64-unknown-linux-musl/release-strip/trigger ./ozb/Trigger
           cp ./target/x86_64-unknown-linux-musl/release-strip/timed ./ozb/Timed
-          cp ./target/x86_64-unknown-linux-musl/release-strip/daemon ./ozb/daemon
+          cp ./target/x86_64-unknown-linux-musl/release-strip/daemon ./ozb/Daemon
 
       - name: upload artifact
         uses: actions/upload-artifact@v3
