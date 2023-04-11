@@ -40,7 +40,7 @@ async fn main() -> Result<(), Error> {
         let etag = match redis.clone() {
             Some(mut redis) => match redis.get(key).await {
                 Ok(value) => value,
-                Err(_) => None,
+                Err(e) => log::error!("error getting redis key: {}", e),
             },
             None => None,
         };
