@@ -1,7 +1,5 @@
 use crate::services::bot::run_discord_bot;
-use config::{Config, Environment};
-use foundation::{aws, config::sources::secret_manager::SecretsManagerSource};
-use ozb::types::ApplicationConfig;
+use ozb::config::get_application_config;
 
 mod services;
 
@@ -15,17 +13,7 @@ async fn main() -> anyhow::Result<()> {
         ],
     );
 
-    let shared_config = aws::config::get_shared_config().await;
-    let secrets = aws_sdk_secretsmanager::Client::new(&shared_config);
-
-    let secret_manager_source = SecretsManagerSource::new("Ozb-", secrets);
-    let config = Config::builder()
-        .add_async_source(secret_manager_source)
-        .add_source(Environment::default().prefix("OZB"))
-        .build()
-        .await?
-        .try_deserialize::<ApplicationConfig>()?;
-
+    let config = get_application_config().await?;
     run_discord_bot(config).await?;
 
     Ok(())

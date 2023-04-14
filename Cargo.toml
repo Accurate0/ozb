@@ -9,7 +9,7 @@ anyhow = "1.0.70"
 fern = "0.6.2"
 futures = "0.3.28"
 log = "0.4.17"
-serde = "1.0.159"
+serde = "1.0.160"
 tokio = { version = "1.27.0", features = ["rt", "macros", "rt-multi-thread"] }
 twilight-cache-inmemory = "0.15"
 twilight-gateway = "0.15"
@@ -22,7 +22,7 @@ reqwest-middleware = "0.2.1"
 reqwest-tracing = "0.4.1"
 reqwest-retry = "0.2.2"
 http = "0.2.9"
-serde_json = "1.0.95"
+serde_json = "1.0.96"
 foundation = { git = "https://github.com/Accurate0/foundation.git", features = [
     "aws",
     "http",
@@ -34,8 +34,8 @@ redis = { version = "0.23.0", features = [
     "tokio-rustls-comp",
     "connection-manager",
 ] }
-aws-sdk-secretsmanager = "0.25.1"
-aws-sdk-dynamodb = "0.25.1"
+aws-sdk-secretsmanager = "0.26.0"
+aws-sdk-dynamodb = "0.26.0"
 serde_dynamo = { version = "4.2.0", features = ["aws-sdk-dynamodb+0_24"] }
 tracing = "0.1.37"
 config = "0.13.3"
@@ -47,8 +47,8 @@ prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-
     "mongodb",
 ] }
 chrono = "0.4.24"
-lambda_runtime = "0.7.3"
-lambda_http = "0.7.3"
+lambda_runtime = "0.8.0"
+lambda_http = "0.8.0"
 chrono-tz = "0.8.2"
 tl = "0.7.7"
 

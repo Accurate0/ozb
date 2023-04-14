@@ -2,16 +2,12 @@ use ::http::header::ETAG;
 use ::http::StatusCode;
 use anyhow::Context;
 use chrono::DateTime;
-use config::{Config, Environment};
 use foundation::http;
-use foundation::{aws, config::sources::secret_manager::SecretsManagerSource};
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
+use ozb::config::get_application_config;
 use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX};
-use ozb::{
-    prisma::{self, posts, trigger_ids},
-    types::ApplicationConfig,
-};
+use ozb::prisma::{self, posts, trigger_ids};
 use ozb::{skip_option, skip_result};
 use redis::AsyncCommands;
 use reqwest::ClientBuilder;
@@ -20,15 +16,7 @@ use serde_json::Value;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     foundation::log::init_logger(log::LevelFilter::Info, &[]);
-    let shared_config = aws::config::get_shared_config().await;
-    let secrets = aws_sdk_secretsmanager::Client::new(&shared_config);
-    let secret_manager_source = SecretsManagerSource::new("Ozb-", secrets);
-    let config = Config::builder()
-        .add_async_source(secret_manager_source)
-        .add_source(Environment::default().prefix("OZB"))
-        .build()
-        .await?
-        .try_deserialize::<ApplicationConfig>()?;
+    let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
     let http_client = &http::get_default_middleware(ClientBuilder::new().build()?).build();
     let client = redis::Client::open(config.redis_connection_string.clone())?;
