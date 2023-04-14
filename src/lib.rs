@@ -1,3 +1,4 @@
+#[cfg(feature = "prisma")]
 pub mod config;
 pub mod constants;
 pub mod r#macro;
