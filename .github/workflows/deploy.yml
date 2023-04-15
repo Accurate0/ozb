@@ -6,6 +6,8 @@ on:
 
 jobs:
   build-container:
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: configure oicd aws credentials
@@ -29,6 +31,8 @@ jobs:
           tags: ${{ vars.AWS_ECR_REGISTRY }}
 
   deploy-ecs:
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     needs: [build-container, build-lambda]
     steps:
@@ -83,6 +87,8 @@ jobs:
           path: ./ozb
 
   deploy-lambda:
+    permissions:
+      id-token: write
     needs: [build-lambda, build-container]
     runs-on: ubuntu-latest
     strategy:
