@@ -3,23 +3,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
 pub struct ApplicationConfig {
-    #[cfg(debug_assertions)]
-    #[serde(rename = "DiscordAuthToken-dev")]
+    #[serde(alias = "discordauthtoken")]
     pub discord_token: String,
 
-    #[cfg(not(debug_assertions))]
-    #[serde(rename = "DiscordAuthToken")]
-    pub discord_token: String,
-
-    #[cfg(not(debug_assertions))]
-    #[serde(rename = "MongoDbConnectionString")]
+    #[serde(alias = "mongodbconnectionstring")]
     pub mongodb_connection_string: String,
 
-    #[cfg(debug_assertions)]
-    #[serde(rename = "MongoDbConnectionString-dev")]
-    pub mongodb_connection_string: String,
-
-    #[serde(rename = "RedisConnectionString")]
+    #[serde(alias = "redisconnectionstring")]
     pub redis_connection_string: String,
 }
 
