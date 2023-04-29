@@ -9,13 +9,11 @@ pub async fn get_application_config() -> Result<ApplicationConfig, anyhow::Error
     let secret_manager_source = SecretsManagerSource::new("Ozb-", secrets.clone());
     let shared_secrets_source = SecretsManagerSource::new("Shared-", secrets).with_required(false);
 
-    let cfg = Config::builder()
+    Ok(Config::builder()
         .add_async_source(secret_manager_source)
         .add_async_source(shared_secrets_source)
         .add_source(Environment::default().prefix("OZB"))
         .build()
-        .await?;
-    log::info!("{:#?}", cfg);
-
-    Ok(cfg.try_deserialize::<ApplicationConfig>()?)
+        .await?
+        .try_deserialize::<ApplicationConfig>()?)
 }
