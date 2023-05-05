@@ -17,6 +17,7 @@ model Posts {
     link            String
     description     String
     thumbnail       String?
+    categories      String[]
 }
 
 model RegisteredKeywords {

@@ -103,6 +103,8 @@ async fn main() -> Result<(), Error> {
                     .to_owned())
             };
 
+            let categories = item.categories().iter().map(|c| c.name);
+
             log::info!("inserting: {} - {} - {}", guid, title, link);
             let added = prisma_client
                 .posts()
@@ -116,7 +118,10 @@ async fn main() -> Result<(), Error> {
                         description,
                         vec![posts::thumbnail::set(thumbnail().ok())],
                     ),
-                    vec![posts::thumbnail::set(thumbnail().ok())],
+                    vec![
+                        posts::thumbnail::set(thumbnail().ok()),
+                        posts::categories::set(categories),
+                    ],
                 )
                 .exec()
                 .await?;
