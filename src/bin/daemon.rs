@@ -103,7 +103,7 @@ async fn main() -> Result<(), Error> {
                     .to_owned())
             };
 
-            let categories = item
+            let categories: Vec<_> = item
                 .categories()
                 .iter()
                 .map(|c| c.name.to_owned())
@@ -120,7 +120,10 @@ async fn main() -> Result<(), Error> {
                         publication_date,
                         link,
                         description,
-                        vec![posts::thumbnail::set(thumbnail().ok())],
+                        vec![
+                            posts::thumbnail::set(thumbnail().ok()),
+                            posts::categories::set(categories.clone()),
+                        ],
                     ),
                     vec![
                         posts::thumbnail::set(thumbnail().ok()),
