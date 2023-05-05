@@ -125,10 +125,7 @@ async fn main() -> Result<(), Error> {
                             posts::categories::set(categories.clone()),
                         ],
                     ),
-                    vec![
-                        posts::thumbnail::set(thumbnail().ok()),
-                        posts::categories::set(categories),
-                    ],
+                    vec![],
                 )
                 .exec()
                 .await?;
