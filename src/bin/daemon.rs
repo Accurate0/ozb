@@ -103,7 +103,11 @@ async fn main() -> Result<(), Error> {
                     .to_owned())
             };
 
-            let categories = item.categories().iter().map(|c| c.name);
+            let categories = item
+                .categories()
+                .iter()
+                .map(|c| c.name.to_owned())
+                .collect();
 
             log::info!("inserting: {} - {} - {}", guid, title, link);
             let added = prisma_client
