@@ -108,6 +108,14 @@ async fn main() -> Result<(), Error> {
                         .field(EmbedFieldBuilder::new(
                             "Set at",
                             data.added_at.with_timezone(&Australia::Perth).to_rfc2822(),
+                        ))
+                        .field(EmbedFieldBuilder::new(
+                            "Categories",
+                            post_categories
+                                .iter()
+                                .map(|p| p.to_string())
+                                .collect::<Vec<String>>()
+                                .join(", "),
                         ));
                     let embed = if let Some(ref thumbnail) = thumbnail {
                         embed.thumbnail(ImageSource::url(thumbnail.clone())?)

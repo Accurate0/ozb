@@ -156,8 +156,13 @@ async fn handle_register_keywords(
     ctx.interaction_client
         .create_followup(&ctx.interaction.token)
         .content(&format!(
-            "Registered \"{}\" as keyword for search with categories: {:?}",
-            keyword, values
+            "Registered \"{}\" as keyword for search with categories: {}",
+            keyword,
+            values
+                .iter()
+                .map(|p| p.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
         ))?
         .await?;
 
