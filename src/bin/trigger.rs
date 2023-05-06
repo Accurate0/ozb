@@ -84,9 +84,9 @@ async fn main() -> Result<(), Error> {
                     || keyword_categories
                         .iter()
                         .any(|c| *c == Categories::All.to_string())
-                    || post_categories
+                    || keyword_categories
                         .iter()
-                        .any(|p| keyword_categories.iter().any(|c| p == c));
+                        .any(|p| post_categories.iter().any(|c| p == c));
 
                 let trigger_condition = title_or_description && category_matches;
 
