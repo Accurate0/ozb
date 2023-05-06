@@ -1,30 +1,40 @@
 use anyhow::Context;
+use foundation::util::get_uuid;
 use futures::FutureExt;
 use ozb::{
     prisma::{
         self,
         read_filters::StringFilter,
-        registered_keywords::{UniqueWhereParam, WhereParam},
+        registered_keywords::{self, UniqueWhereParam, WhereParam},
     },
-    types::{ApplicationConfig, BotContext},
+    types::{ApplicationConfig, BotContext, Categories},
 };
 use std::{error::Error, sync::Arc};
+use strum::EnumProperty;
+use strum::IntoEnumIterator;
 use tracing::instrument;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Event, EventType, Intents, Shard, ShardId};
 use twilight_http::Client as DiscordHttpClient;
 use twilight_model::{
-    channel::message::MessageFlags,
+    channel::message::{
+        component::{SelectMenu, SelectMenuOption},
+        MessageFlags, ReactionType,
+    },
     gateway::{
         payload::outgoing::UpdatePresence,
         presence::{ActivityType, MinimalActivity, Status},
     },
 };
+use twilight_standby::Standby;
+use twilight_util::builder::InteractionResponseDataBuilder;
 use zephyrus::{
     framework::DefaultError,
     prelude::*,
     twilight_exports::{
-        CommandOptionChoice, CommandOptionChoiceValue, InteractionResponseData, InteractionType,
+        ActionRow, CommandOptionChoice, CommandOptionChoiceValue, Component, Interaction,
+        InteractionData, InteractionResponse, InteractionResponseData, InteractionResponseType,
+        InteractionType,
     },
 };
 
@@ -41,31 +51,114 @@ async fn handle_register_keywords(
     ctx: &SlashContext<Arc<BotContext>>,
     #[description = "what u want"] keyword: String,
 ) -> DefaultCommandResult {
-    ctx.acknowledge().await?;
+    let response = InteractionResponseDataBuilder::default().flags(MessageFlags::EPHEMERAL);
+    ctx.interaction_client
+        .create_response(
+            ctx.interaction.id,
+            &ctx.interaction.token,
+            &InteractionResponse {
+                kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                data: Some(response.build()),
+            },
+        )
+        .await?;
 
     let prisma_client = &ctx.data.prisma_client;
-    let discord_id = ctx
-        .interaction
+    let interaction = &ctx.interaction;
+    let discord_id = interaction
         .author_id()
         .context("must have author")?
         .to_string();
 
-    let channel_id = ctx
-        .interaction
-        .channel_id
+    let channel_id = interaction
+        .channel
+        .as_ref()
         .context("must be from a channel")?
+        .id
         .to_string();
+
+    let categories = Categories::iter();
+    let option_count = categories.len();
+    let uuid = get_uuid();
+    let modal = SelectMenu {
+        custom_id: uuid.clone(),
+        disabled: false,
+        max_values: Some(option_count as u8),
+        min_values: Some(1),
+        options: categories
+            .map(|c| SelectMenuOption {
+                default: false,
+                description: None,
+                emoji: Some(ReactionType::Unicode {
+                    name: c.get_str("emoji").unwrap_or_default().to_string(),
+                }),
+                label: c.to_string(),
+                value: c.to_string(),
+            })
+            .collect(),
+        placeholder: None,
+    };
+
+    let action_row = ActionRow {
+        components: [modal.into()].into(),
+    };
+
+    let component_message = ctx
+        .interaction_client
+        .update_response(&ctx.interaction.token)
+        .components(Some(&[Component::ActionRow(action_row)]))?
+        .await?
+        .model()
+        .await?;
+
+    let wait_for_selection = ctx
+        .data
+        .standby
+        .wait_for_component(component_message.id, move |i: &Interaction| {
+            i.data.clone().map_or(false, |data| match data {
+                InteractionData::MessageComponent(m) => m.custom_id == uuid,
+                _ => false,
+            })
+        })
+        .await?;
+
+    ctx.interaction_client
+        .create_response(
+            wait_for_selection.id,
+            &wait_for_selection.token,
+            &InteractionResponse {
+                kind: InteractionResponseType::DeferredUpdateMessage,
+                data: None,
+            },
+        )
+        .await?;
+
+    ctx.interaction_client
+        .delete_response(&ctx.interaction.token)
+        .await?;
+
+    let values = match wait_for_selection.data.unwrap() {
+        InteractionData::MessageComponent(m) => m.values,
+        _ => return Err(anyhow::Error::msg("this should not happen").into()),
+    };
 
     prisma_client
         .registered_keywords()
-        .create(keyword.clone(), discord_id, channel_id, vec![])
+        .create(
+            keyword.clone(),
+            discord_id,
+            channel_id,
+            vec![registered_keywords::categories::set(values.clone())],
+        )
         .exec()
         .await?;
 
     ctx.interaction_client
         .create_followup(&ctx.interaction.token)
-        .content(&format!("Registered \"{}\" as keyword for search", keyword))?
-        .flags(MessageFlags::EPHEMERAL)
+        .content(&format!(
+            "Registered \"{}\" as keyword for search with categories: {:?}",
+            keyword, values
+        ))?
         .await?;
 
     Ok(())
@@ -134,7 +227,7 @@ async fn handle_unregister_keywords(
 pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Error> {
     let discord_token = config.discord_token.clone();
     let discord_http = Arc::new(DiscordHttpClient::new(discord_token.to_owned()));
-
+    let standby = Standby::new();
     let mut shard = Shard::new(
         ShardId::ONE,
         discord_token.to_string(),
@@ -146,6 +239,7 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
     let bot_context = Arc::new(BotContext {
         config,
         prisma_client,
+        standby,
     });
 
     let cache = InMemoryCache::builder()
@@ -214,14 +308,9 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
             continue;
         }
 
+        bot_context.standby.process(&event);
         tokio::spawn(
-            handle_event(
-                event,
-                Arc::clone(&discord_http),
-                Arc::clone(&bot_context),
-                Arc::clone(&framework),
-            )
-            .then(|result| async {
+            handle_event(event, Arc::clone(&framework)).then(|result| async {
                 match result {
                     Ok(_) => {}
                     Err(e) => log::error!("{}", e),
@@ -236,8 +325,6 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
 #[instrument(skip_all)]
 async fn handle_event(
     event: Event,
-    _discord: Arc<DiscordHttpClient>,
-    _ctx: Arc<BotContext>,
     framework: Arc<Framework<Arc<BotContext>>>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     if let Event::InteractionCreate(i) = event {

@@ -5,19 +5,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.70"
+anyhow = "1.0.71"
 fern = "0.6.2"
 futures = "0.3.28"
 log = "0.4.17"
-serde = "1.0.160"
+serde = "1.0.162"
 tokio = { version = "1.28.0", features = ["rt", "macros", "rt-multi-thread"] }
-twilight-cache-inmemory = "0.15"
+twilight-cache-inmemory = "0.15.2"
 twilight-gateway = "0.15"
 twilight-http = "0.15"
 openssl = { version = "0.10", features = ["vendored"] }
 twilight-model = "0.15"
-twilight-util = { version = "0.15.1", features = ["builder"] }
-reqwest = { version = "0.11.16", features = ["json", "gzip"] }
+twilight-standby = "0.15"
+twilight-util = { version = "0.15.2", features = ["builder"] }
+reqwest = { version = "0.11.17", features = ["json", "gzip"] }
 reqwest-middleware = "0.2.1"
 reqwest-tracing = "0.4.1"
 reqwest-retry = "0.2.2"
@@ -36,8 +37,8 @@ redis = { version = "0.23.0", features = [
 ] }
 aws-sdk-secretsmanager = "0.26.0"
 aws-sdk-dynamodb = "0.26.0"
-serde_dynamo = { version = "4.2.1", features = ["aws-sdk-dynamodb+0_24"] }
-tracing = "0.1.38"
+serde_dynamo = { version = "4.2.2", features = ["aws-sdk-dynamodb+0_24"] }
+tracing = "0.1.37"
 config = "0.13.3"
 rss = "2.0.3"
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.6", features = [
@@ -51,6 +52,9 @@ lambda_runtime = "0.8.0"
 lambda_http = "0.8.0"
 chrono-tz = "0.8.2"
 tl = "0.7.7"
+strum = { version = "0.24", features = ["derive"] }
+strum_macros = "0.24"
+
 
 [features]
 prisma = []

@@ -4,7 +4,7 @@ use lambda_runtime::LambdaEvent;
 use ozb::{
     config::get_application_config,
     prisma::{self, posts::UniqueWhereParam},
-    types::MongoDbPayload,
+    types::{Categories, MongoDbPayload},
 };
 use tl::{Bytes, ParserOptions};
 use twilight_http::Client as DiscordHttpClient;
@@ -67,6 +67,7 @@ async fn main() -> Result<(), Error> {
 
             let link = &full_document.link;
             let thumbnail = &full_document.thumbnail;
+            let post_categories = &full_document.categories;
 
             log::info!("[new deal] id: {}", event.payload.id);
             log::info!("title: {}, {}", title, link);
@@ -74,10 +75,29 @@ async fn main() -> Result<(), Error> {
 
             // todo: add regex support
             for data in active_keywords {
-                let keyword = data.keyword.to_ascii_lowercase();
-                if title.to_ascii_lowercase().contains(&keyword)
-                    || description.to_ascii_lowercase().contains(&keyword)
-                {
+                let keyword: String = data.keyword.to_ascii_lowercase();
+                let keyword_categories = &data.categories;
+
+                let title_or_description = title.to_ascii_lowercase().contains(&keyword)
+                    || description.to_ascii_lowercase().contains(&keyword);
+
+                let category_matches = keyword_categories.is_empty()
+                    || keyword_categories
+                        .iter()
+                        .any(|c| *c == Categories::All.to_string())
+                    || post_categories
+                        .iter()
+                        .any(|p| keyword_categories.iter().any(|c| p == c));
+
+                let trigger_condition = title_or_description && category_matches;
+
+                log::info!("keyword: {}", keyword);
+                log::info!("keyword categories: {:?}", keyword_categories);
+                log::info!("post categories: {:?}", post_categories);
+                log::info!("title/description match: {}", title_or_description);
+                log::info!("category match: {}", category_matches);
+
+                if trigger_condition {
                     log::info!("triggered for {} [{}]", keyword, data.user_id);
                     let embed = EmbedBuilder::default()
                         .color(0xde935f)

@@ -26,6 +26,7 @@ model RegisteredKeywords {
     keyword    String
     user_id    String
     channel_id String
+    categories String[]
 }
 
 model TriggerIds {
