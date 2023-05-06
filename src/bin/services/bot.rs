@@ -185,7 +185,19 @@ async fn autocomplete_existing_keywords(
         .ok()?
         .iter()
         .map(|item| CommandOptionChoice {
-            name: item.keyword.clone(),
+            name: format!(
+                "{} ({})",
+                item.keyword.clone(),
+                if item.categories.is_empty() {
+                    Categories::All.to_string()
+                } else {
+                    item.categories
+                        .iter()
+                        .map(|p| p.to_string())
+                        .collect::<Vec<String>>()
+                        .join(", ")
+                },
+            ),
             name_localizations: None,
             value: CommandOptionChoiceValue::String(item.id.clone()),
         })
