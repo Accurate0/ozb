@@ -25,7 +25,7 @@ async fn main() -> Result<(), Error> {
 
     lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| async move {
         let redis = redis.clone();
-        let etag = match redis.clone() {
+        let etag: Option<String> = match redis.clone() {
             Some(mut redis) => match redis.get(key).await {
                 Ok(value) => value,
                 Err(e) => {
@@ -38,10 +38,7 @@ async fn main() -> Result<(), Error> {
 
         let response = http_client
             .get(OZB_RSS_DEALS_URL)
-            .header(
-                IF_NONE_MATCH,
-                etag.clone().unwrap_or("".to_owned()).to_string(),
-            )
+            .header(IF_NONE_MATCH, etag.clone().unwrap_or_default().to_string())
             .send()
             .await?;
 
