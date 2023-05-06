@@ -106,7 +106,7 @@ async fn main() -> Result<(), Error> {
             let categories: Vec<_> = item
                 .categories()
                 .iter()
-                .map(|c| c.name.to_owned())
+                .map(|c| c.name.to_owned().replace("&amp;", "&"))
                 .collect();
 
             log::info!("inserting: {} - {} - {}", guid, title, link);
