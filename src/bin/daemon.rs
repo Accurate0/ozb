@@ -1,4 +1,4 @@
-use ::http::header::ETAG;
+use ::http::header::{ETAG, IF_NONE_MATCH};
 use ::http::StatusCode;
 use anyhow::Context;
 use chrono::DateTime;
@@ -39,7 +39,7 @@ async fn main() -> Result<(), Error> {
         let response = http_client
             .get(OZB_RSS_DEALS_URL)
             .header(
-                "If-None-Match",
+                IF_NONE_MATCH,
                 etag.clone().unwrap_or("".to_owned()).to_string(),
             )
             .send()
