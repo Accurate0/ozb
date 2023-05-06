@@ -1,4 +1,3 @@
-use chrono_tz::Australia;
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
@@ -105,10 +104,6 @@ async fn main() -> Result<(), Error> {
                         .field(EmbedFieldBuilder::new("Title", title.clone()))
                         .field(EmbedFieldBuilder::new("Link", link.clone()))
                         .field(EmbedFieldBuilder::new("Keyword", keyword.clone()))
-                        .field(EmbedFieldBuilder::new(
-                            "Set at",
-                            data.added_at.with_timezone(&Australia::Perth).to_rfc2822(),
-                        ))
                         .field(EmbedFieldBuilder::new(
                             "Categories",
                             post_categories
