@@ -96,7 +96,7 @@ async fn handle_register_keywords(
                 value: c.to_string(),
             })
             .collect(),
-        placeholder: None,
+        placeholder: Some("Select categories".to_owned()),
     };
 
     let action_row = ActionRow {
@@ -123,6 +123,10 @@ async fn handle_register_keywords(
         .await?;
 
     ctx.interaction_client
+        .delete_response(&ctx.interaction.token)
+        .await?;
+
+    ctx.interaction_client
         .create_response(
             wait_for_selection.id,
             &wait_for_selection.token,
@@ -131,10 +135,6 @@ async fn handle_register_keywords(
                 data: None,
             },
         )
-        .await?;
-
-    ctx.interaction_client
-        .delete_response(&ctx.interaction.token)
         .await?;
 
     let values = match wait_for_selection.data.unwrap() {
