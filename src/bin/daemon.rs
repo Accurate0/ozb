@@ -38,7 +38,7 @@ async fn main() -> Result<(), Error> {
 
         let response = http_client
             .get(OZB_RSS_DEALS_URL)
-            .header(IF_NONE_MATCH, etag.clone().unwrap_or_default().to_string())
+            .header(IF_NONE_MATCH, etag.unwrap_or_default())
             .send()
             .await?;
 
