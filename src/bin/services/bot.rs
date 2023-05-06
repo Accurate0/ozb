@@ -158,11 +158,7 @@ async fn handle_register_keywords(
         .content(&format!(
             "Registered \"{}\" as keyword for search with categories: {}",
             keyword,
-            values
-                .iter()
-                .map(|p| p.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
+            values.join(", ")
         ))?
         .await?;
 
@@ -191,11 +187,7 @@ async fn autocomplete_existing_keywords(
                 if item.categories.is_empty() {
                     Categories::All.to_string()
                 } else {
-                    item.categories
-                        .iter()
-                        .map(|p| p.to_string())
-                        .collect::<Vec<String>>()
-                        .join(", ")
+                    item.categories.join(", ")
                 },
             ),
             name_localizations: None,

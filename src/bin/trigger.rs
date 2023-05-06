@@ -106,11 +106,7 @@ async fn main() -> Result<(), Error> {
                         .field(EmbedFieldBuilder::new("Keyword", keyword.clone()))
                         .field(EmbedFieldBuilder::new(
                             "Categories",
-                            post_categories
-                                .iter()
-                                .map(|p| p.to_string())
-                                .collect::<Vec<String>>()
-                                .join(", "),
+                            post_categories.join(", "),
                         ));
                     let embed = if let Some(ref thumbnail) = thumbnail {
                         embed.thumbnail(ImageSource::url(thumbnail.clone())?)
