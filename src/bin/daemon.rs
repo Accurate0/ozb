@@ -51,7 +51,7 @@ async fn main() -> Result<(), Error> {
             // set etag
             let etag = resp_headers
                 .get(ETAG)
-                .map(|h| h.to_str().unwrap().to_owned());
+                .map(|h| h.to_str().unwrap_or_default().to_owned());
 
             if let Some(etag) = etag {
                 if let Some(mut redis) = redis {
