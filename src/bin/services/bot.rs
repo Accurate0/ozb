@@ -295,18 +295,6 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
 
         if matches!(event.kind(), EventType::Ready) {
             log::info!("connected on shard");
-
-            let activity = MinimalActivity {
-                kind: ActivityType::Listening,
-                name: "THE BADDEST by K/DA".to_owned(),
-                url: None,
-            }
-            .into();
-
-            let request = UpdatePresence::new([activity], false, None, Status::Online)?;
-            let result = shard.command(&request).await;
-            log::info!("presence update: {:?}", result);
-
             continue;
         }
 
