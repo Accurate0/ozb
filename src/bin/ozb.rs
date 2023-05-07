@@ -118,10 +118,6 @@ async fn handle_register_keywords(
         .await?;
 
     ctx.interaction_client
-        .delete_response(&ctx.interaction.token)
-        .await?;
-
-    ctx.interaction_client
         .create_response(
             wait_for_selection.id,
             &wait_for_selection.token,
@@ -137,24 +133,31 @@ async fn handle_register_keywords(
         _ => return Err(anyhow::Error::msg("this should not happen").into()),
     };
 
+    let categories = if values.iter().any(|v| *v == Categories::All.to_string()) {
+        vec![Categories::All.to_string()]
+    } else {
+        values
+    };
+
     prisma_client
         .registered_keywords()
         .create(
             keyword.clone(),
             discord_id,
             channel_id,
-            vec![registered_keywords::categories::set(values.clone())],
+            vec![registered_keywords::categories::set(categories.clone())],
         )
         .exec()
         .await?;
 
     ctx.interaction_client
-        .create_followup(&ctx.interaction.token)
-        .content(&format!(
+        .update_response(&ctx.interaction.token)
+        .content(Some(&format!(
             "Registered \"{}\" as keyword for search with categories: {}",
             keyword,
-            values.join(", ")
-        ))?
+            categories.join(", ")
+        )))?
+        .components(None)?
         .await?;
 
     Ok(())
@@ -208,7 +211,17 @@ async fn handle_unregister_keywords(
     // but that requires knowing the db key (good for me?)
     option_id: String,
 ) -> DefaultCommandResult {
-    ctx.acknowledge().await?;
+    let response = InteractionResponseDataBuilder::default().flags(MessageFlags::EPHEMERAL);
+    ctx.interaction_client
+        .create_response(
+            ctx.interaction.id,
+            &ctx.interaction.token,
+            &InteractionResponse {
+                kind: InteractionResponseType::DeferredChannelMessageWithSource,
+                data: Some(response.build()),
+            },
+        )
+        .await?;
 
     let prisma_client = &ctx.data.prisma_client;
     let deleted_item = prisma_client
@@ -218,11 +231,11 @@ async fn handle_unregister_keywords(
         .await?;
 
     ctx.interaction_client
-        .create_followup(&ctx.interaction.token)
-        .content(&format!(
+        .update_response(&ctx.interaction.token)
+        .content(Some(&format!(
             "Removed \"{}\" as keyword for search",
             deleted_item.keyword
-        ))?
+        )))?
         .await?;
 
     Ok(())
