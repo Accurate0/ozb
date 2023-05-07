@@ -16,15 +16,9 @@ use tracing::instrument;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Event, EventType, Intents, Shard, ShardId};
 use twilight_http::Client as DiscordHttpClient;
-use twilight_model::{
-    channel::message::{
-        component::{SelectMenu, SelectMenuOption},
-        MessageFlags, ReactionType,
-    },
-    gateway::{
-        payload::outgoing::UpdatePresence,
-        presence::{ActivityType, MinimalActivity, Status},
-    },
+use twilight_model::channel::message::{
+    component::{SelectMenu, SelectMenuOption},
+    MessageFlags, ReactionType,
 };
 use twilight_standby::Standby;
 use twilight_util::builder::InteractionResponseDataBuilder;
