@@ -2,6 +2,7 @@ use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
     config::get_application_config,
+    log::init_logger,
     prisma::{self, posts::UniqueWhereParam},
     types::{Categories, MongoDbPayload},
 };
@@ -13,7 +14,7 @@ use zephyrus::twilight_exports::ChannelMarker;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    foundation::log::init_logger(log::LevelFilter::Info, &[]);
+    init_logger();
     let config = get_application_config().await?;
     let discord_http = &DiscordHttpClient::new(config.discord_token.to_owned());
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;

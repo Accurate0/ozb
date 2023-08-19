@@ -1,7 +1,7 @@
 use anyhow::Context;
-use foundation::util::get_uuid;
 use futures::FutureExt;
 use ozb::config::get_application_config;
+use ozb::log::init_logger;
 use ozb::{
     prisma::{
         self,
@@ -74,7 +74,7 @@ async fn handle_register_keywords(
 
     let categories = Categories::iter();
     let option_count = categories.len();
-    let uuid = get_uuid();
+    let uuid = uuid::Uuid::new_v4().as_hyphenated().to_string();
     let modal = SelectMenu {
         custom_id: uuid.clone(),
         disabled: false,
@@ -348,13 +348,7 @@ async fn handle_event(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    foundation::log::init_logger(
-        log::LevelFilter::Info,
-        &[
-            "twilight_http_ratelimiting::in_memory::bucket",
-            "twilight_gateway::shard",
-        ],
-    );
+    init_logger();
 
     let config = get_application_config().await?;
     run_discord_bot(config).await?;

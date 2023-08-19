@@ -1,9 +1,13 @@
-use crate::types::ApplicationConfig;
+use crate::{source::SecretsManagerSource, types::ApplicationConfig};
+use aws_sdk_dynamodb::config::retry::RetryConfig;
 use config::{Config, Environment};
-use foundation::{aws, config::sources::secret_manager::SecretsManagerSource};
 
 pub async fn get_application_config() -> Result<ApplicationConfig, anyhow::Error> {
-    let shared_config = aws::config::get_shared_config().await;
+    let shared_config = aws_config::from_env()
+        .region("ap-southeast-2")
+        .retry_config(RetryConfig::standard())
+        .load()
+        .await;
 
     let secrets = aws_sdk_secretsmanager::Client::new(&shared_config);
     let secret_manager_source = SecretsManagerSource::new("Ozb-", secrets.clone());

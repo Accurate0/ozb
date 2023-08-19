@@ -2,23 +2,23 @@ use ::http::header::{ETAG, IF_NONE_MATCH};
 use ::http::StatusCode;
 use anyhow::Context;
 use chrono::DateTime;
-use foundation::http;
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::config::get_application_config;
 use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX};
+use ozb::http;
+use ozb::log::init_logger;
 use ozb::prisma::{self, posts, trigger_ids};
 use ozb::{skip_option, skip_result};
 use redis::AsyncCommands;
-use reqwest::ClientBuilder;
 use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    foundation::log::init_logger(log::LevelFilter::Info, &[]);
+    init_logger();
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
-    let http_client = &http::get_default_middleware(ClientBuilder::new().build()?).build();
+    let http_client = &http::get_default_http_client();
     let client = redis::Client::open(config.redis_connection_string.clone())?;
     let redis = &client.get_tokio_connection_manager().await.ok();
     let key = &format!("{}_{}", REDIS_KEY_PREFIX, "ETAG");
