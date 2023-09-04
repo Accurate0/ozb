@@ -1,7 +1,7 @@
 use anyhow::Context;
 use futures::FutureExt;
 use ozb::config::get_application_config;
-use ozb::constants::cfg::UPTIME_DAEMON_PUSH_URL;
+use ozb::constants::cfg::UPTIME_BOT_PUSH_URL;
 use ozb::http::get_default_http_client;
 use ozb::log::init_logger;
 use ozb::{
@@ -287,7 +287,7 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
     let http_client = get_default_http_client();
     tokio::spawn(async move {
         loop {
-            let _ = http_client.get(UPTIME_DAEMON_PUSH_URL).send().await;
+            let _ = http_client.get(UPTIME_BOT_PUSH_URL).send().await;
             tokio::time::sleep(Duration::from_secs(60)).await;
         }
     });
