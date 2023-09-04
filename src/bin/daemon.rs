@@ -5,7 +5,7 @@ use chrono::DateTime;
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::config::get_application_config;
-use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX};
+use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX, UPTIME_PUSH_URL};
 use ozb::http;
 use ozb::log::init_logger;
 use ozb::prisma::{self, posts, trigger_ids};
@@ -24,6 +24,7 @@ async fn main() -> Result<(), Error> {
     let key = &format!("{}_{}", REDIS_KEY_PREFIX, "ETAG");
 
     lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| async move {
+        let _ = http_client.get(UPTIME_PUSH_URL).send().await;
         let redis = redis.clone();
         let etag: Option<String> = match redis.clone() {
             Some(mut redis) => match redis.get(key).await {
