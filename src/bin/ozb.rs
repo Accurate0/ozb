@@ -1,8 +1,6 @@
 use anyhow::Context;
 use futures::FutureExt;
 use ozb::config::get_application_config;
-use ozb::constants::cfg::UPTIME_BOT_PUSH_URL;
-use ozb::http::get_default_http_client;
 use ozb::log::init_logger;
 use ozb::{
     prisma::{
@@ -12,7 +10,6 @@ use ozb::{
     },
     types::{ApplicationConfig, BotContext, Categories},
 };
-use std::time::Duration;
 use std::{error::Error, sync::Arc};
 use strum::EnumProperty;
 use strum::IntoEnumIterator;
@@ -283,14 +280,6 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
     if let Err(e) = framework.register_global_commands().await {
         log::error!("error registering commands: {}", e);
     };
-
-    let http_client = get_default_http_client();
-    tokio::spawn(async move {
-        loop {
-            let _ = http_client.get(UPTIME_BOT_PUSH_URL).send().await;
-            tokio::time::sleep(Duration::from_secs(60)).await;
-        }
-    });
 
     while let Ok(event) = shard.next_event().await {
         cache.update(&event);
