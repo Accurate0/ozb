@@ -215,6 +215,11 @@ async fn handle_unregister_keywords(
     // but that requires knowing the db key (good for me?)
     option_id: String,
 ) -> DefaultCommandResult {
+    let discord_id = ctx
+        .interaction
+        .author_id()
+        .context("missing author id")?
+        .to_string();
     let response = InteractionResponseDataBuilder::default().flags(MessageFlags::EPHEMERAL);
     ctx.interaction_client
         .create_response(
@@ -228,20 +233,39 @@ async fn handle_unregister_keywords(
         .await?;
 
     let prisma_client = &ctx.data.prisma_client;
-    let deleted_item = prisma_client
+    let item_to_delete = prisma_client
         .registered_keywords()
-        .delete(UniqueWhereParam::IdEquals(option_id))
+        .find_unique(UniqueWhereParam::IdEquals(option_id.clone()))
         .exec()
         .await?;
 
-    ctx.interaction_client
-        .update_response(&ctx.interaction.token)
-        .content(Some(&format!(
-            "Removed \"{}\" as keyword for search",
-            deleted_item.keyword
-        )))?
-        .await?;
+    if let Some(item) = item_to_delete {
+        let deleted_item = prisma_client
+            .registered_keywords()
+            .delete(UniqueWhereParam::IdEquals(option_id))
+            .exec()
+            .await?;
 
+        if item.user_id == discord_id {
+            ctx.interaction_client
+                .update_response(&ctx.interaction.token)
+                .content(Some(&format!(
+                    "Removed \"{}\" as keyword for search",
+                    deleted_item.keyword
+                )))?
+                .await?;
+        } else {
+            ctx.interaction_client
+                .update_response(&ctx.interaction.token)
+                .content(Some("Hmmmm wyd"))?
+                .await?;
+        }
+    } else {
+        ctx.interaction_client
+            .update_response(&ctx.interaction.token)
+            .content(Some("Error :)"))?
+            .await?;
+    }
     Ok(())
 }
 
