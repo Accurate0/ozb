@@ -168,12 +168,16 @@ async fn autocomplete_existing_keywords(
     ctx: AutocompleteContext<Arc<BotContext>>,
 ) -> Option<InteractionResponseData> {
     let discord_id = ctx.interaction.author_id()?.to_string();
+    let channel_id = ctx.interaction.channel.as_ref().map(|c| c.id)?.to_string();
 
     let choices = ctx
         .data
         .prisma_client
         .registered_keywords()
-        .find_many(vec![WhereParam::UserId(StringFilter::Equals(discord_id))])
+        .find_many(vec![
+            WhereParam::UserId(StringFilter::Equals(discord_id)),
+            WhereParam::ChannelId(StringFilter::Equals(channel_id)),
+        ])
         .exec()
         .await
         .ok()?
