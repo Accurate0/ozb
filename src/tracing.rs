@@ -57,7 +57,7 @@ pub fn external_tracer(name: &'static str) -> Tracer {
         .tracing()
         .with_exporter(pipeline)
         .with_trace_config(trace_config)
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .install_simple()
         .unwrap()
 }
 
@@ -69,8 +69,8 @@ pub fn init_logger(name: &'static str) {
     tracing_subscriber::registry()
         .with(
             Targets::default()
-                // .with_target("aws_smithy_http_tower::parse_response", Level::WARN)
-                // .with_target("aws_config::default_provider::credentials", Level::WARN)
+                .with_target("aws_smithy_http_tower::parse_response", Level::WARN)
+                .with_target("aws_config::default_provider::credentials", Level::WARN)
                 .with_default(Level::INFO),
         )
         .with(tracing_subscriber::fmt::layer())
