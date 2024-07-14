@@ -20,7 +20,7 @@ async fn main() -> Result<(), Error> {
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
     let http_client = &http::get_default_http_client();
     let client = redis::Client::open(config.redis_connection_string.clone())?;
-    let redis = &client.get_tokio_connection_manager().await.ok();
+    let redis = &client.get_connection_manager().await.ok();
     let key = &format!("{}_{}", REDIS_KEY_PREFIX, "ETAG");
 
     lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| async move {

@@ -35,7 +35,7 @@ use zephyrus::{
 
 #[error_handler]
 async fn handle_interaction_error(_ctx: &SlashContext<Arc<BotContext>>, error: DefaultError) {
-    log::error!("error handling interaction: {:?}", error);
+    tracing::error!("error handling interaction: {:?}", error);
 }
 
 #[instrument(skip(ctx))]
@@ -306,7 +306,7 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
     );
 
     if let Err(e) = framework.register_global_commands().await {
-        log::error!("error registering commands: {}", e);
+        tracing::error!("error registering commands: {}", e);
     };
 
     while let Ok(event) = shard.next_event().await {
@@ -322,15 +322,15 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
                     None => discord_http.guild(guild_id).await?.model().await?.name,
                 };
 
-                log::info!("event {:?} from server {:?}", event.kind(), guild_name);
+                tracing::info!("event {:?} from server {:?}", event.kind(), guild_name);
             }
             None => {
-                log::info!("event {:?}", event.kind());
+                tracing::info!("event {:?}", event.kind());
             }
         }
 
         if matches!(event.kind(), EventType::Ready) {
-            log::info!("connected on shard");
+            tracing::info!("connected on shard");
             continue;
         }
 
@@ -346,7 +346,7 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
             handle_event(event, Arc::clone(&framework)).then(|result| async {
                 match result {
                     Ok(_) => {}
-                    Err(e) => log::error!("{}", e),
+                    Err(e) => tracing::error!("{}", e),
                 }
             }),
         );
@@ -367,7 +367,7 @@ async fn handle_event(
                 let inner = i.0;
                 framework.process(inner).await;
             }
-            kind => log::info!("ignoring interaction type: {:?}", kind),
+            kind => tracing::info!("ignoring interaction type: {:?}", kind),
         }
     }
 
