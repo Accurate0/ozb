@@ -4,7 +4,7 @@ macro_rules! skip_option {
         match $res {
             Some(val) => val,
             None => {
-                log::warn!("skipping loop because {} missing", $item);
+                tracing::warn!("skipping loop because {} missing", $item);
                 continue;
             }
         }
@@ -17,7 +17,7 @@ macro_rules! skip_result {
         match $res {
             Ok(val) => val,
             Err(e) => {
-                log::warn!("skipping loop because {} has error: {}", $item, e);
+                tracing::warn!("skipping loop because {} has error: {}", $item, e);
                 continue;
             }
         }
