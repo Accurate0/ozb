@@ -143,7 +143,7 @@ async fn main() -> Result<(), Error> {
 
             Ok::<(), Error>(())
         }
-        .instrument(tracing::span!(Level::INFO, "checking ozbargain"))
+        .instrument(tracing::span!(parent: None, Level::INFO, "ozb::check"))
     }))
     .await?;
 

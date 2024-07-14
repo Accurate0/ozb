@@ -7,6 +7,7 @@ use ozb::{
     types::{Categories, MongoDbPayload},
 };
 use tl::{Bytes, ParserOptions};
+use tracing::{Instrument, Level};
 use twilight_http::Client as DiscordHttpClient;
 use twilight_model::{channel::message::AllowedMentions, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
@@ -19,8 +20,8 @@ async fn main() -> Result<(), Error> {
     let discord_http = &DiscordHttpClient::new(config.discord_token.to_owned());
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
 
-    lambda_runtime::run(service_fn(
-        move |event: LambdaEvent<MongoDbPayload>| async move {
+    lambda_runtime::run(service_fn(move |event: LambdaEvent<MongoDbPayload>| {
+        async move {
             let document_id = event.payload.detail.full_document.post_id;
             let full_document = prisma_client
                 .posts()
@@ -142,8 +143,9 @@ async fn main() -> Result<(), Error> {
             }
 
             Ok::<(), Error>(())
-        },
-    ))
+        }
+        .instrument(tracing::span!(parent: None, Level::INFO, "ozb::new_deal"))
+    }))
     .await?;
     Ok(())
 }
