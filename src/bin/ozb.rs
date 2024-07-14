@@ -1,7 +1,7 @@
 use anyhow::Context;
 use futures::FutureExt;
 use ozb::config::get_application_config;
-use ozb::log::init_logger;
+use ozb::tracing::init_logger;
 use ozb::{
     prisma::{
         self,
@@ -376,7 +376,7 @@ async fn handle_event(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    init_logger();
+    init_logger("bot");
 
     let config = get_application_config().await?;
     run_discord_bot(config).await?;

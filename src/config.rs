@@ -1,9 +1,10 @@
 use crate::{source::SecretsManagerSource, types::ApplicationConfig};
+use aws_config::BehaviorVersion;
 use aws_sdk_dynamodb::config::retry::RetryConfig;
 use config::{Config, Environment};
 
 pub async fn get_application_config() -> Result<ApplicationConfig, anyhow::Error> {
-    let shared_config = aws_config::from_env()
+    let shared_config = aws_config::defaults(BehaviorVersion::v2024_03_28())
         .region("ap-southeast-2")
         .retry_config(RetryConfig::standard())
         .load()

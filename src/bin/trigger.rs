@@ -2,8 +2,8 @@ use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
     config::get_application_config,
-    log::init_logger,
     prisma::{self, posts::UniqueWhereParam},
+    tracing::init_logger,
     types::{Categories, MongoDbPayload},
 };
 use tl::{Bytes, ParserOptions};
@@ -14,7 +14,7 @@ use zephyrus::twilight_exports::ChannelMarker;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logger();
+    init_logger("trigger");
     let config = get_application_config().await?;
     let discord_http = &DiscordHttpClient::new(config.discord_token.to_owned());
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
@@ -69,9 +69,9 @@ async fn main() -> Result<(), Error> {
             let thumbnail = &full_document.thumbnail;
             let post_categories = &full_document.categories;
 
-            log::info!("[new deal] id: {}", event.payload.id);
-            log::info!("title: {}, {}", title, link);
-            log::info!("description: {}", description.replace('\n', ""));
+            tracing::info!("[new deal] id: {}", event.payload.id);
+            tracing::info!("title: {}, {}", title, link);
+            tracing::info!("description: {}", description.replace('\n', ""));
 
             // todo: add regex support
             for data in active_keywords {
@@ -91,14 +91,14 @@ async fn main() -> Result<(), Error> {
 
                 let trigger_condition = title_or_description && category_matches;
 
-                log::info!("keyword: {}", keyword);
-                log::info!("keyword categories: {:?}", keyword_categories);
-                log::info!("post categories: {:?}", post_categories);
-                log::info!("title/description match: {}", title_or_description);
-                log::info!("category match: {}", category_matches);
+                tracing::info!("keyword: {}", keyword);
+                tracing::info!("keyword categories: {:?}", keyword_categories);
+                tracing::info!("post categories: {:?}", post_categories);
+                tracing::info!("title/description match: {}", title_or_description);
+                tracing::info!("category match: {}", category_matches);
 
                 if trigger_condition {
-                    log::info!("triggered for {} [{}]", keyword, data.user_id);
+                    tracing::info!("triggered for {} [{}]", keyword, data.user_id);
                     let embed = EmbedBuilder::default()
                         .color(0xde935f)
                         .title("OzBargain")

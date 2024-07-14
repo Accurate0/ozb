@@ -7,15 +7,15 @@ use lambda_runtime::LambdaEvent;
 use ozb::config::get_application_config;
 use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX};
 use ozb::http;
-use ozb::log::init_logger;
 use ozb::prisma::{self, posts, trigger_ids};
+use ozb::tracing::init_logger;
 use ozb::{skip_option, skip_result};
 use redis::AsyncCommands;
 use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logger();
+    init_logger("daemon");
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
     let http_client = &http::get_default_http_client();
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Error> {
             Some(mut redis) => match redis.get(key).await {
                 Ok(value) => value,
                 Err(e) => {
-                    log::error!("error getting redis key: {}", e);
+                    tracing::error!("error getting redis key: {}", e);
                     None
                 }
             },
@@ -43,7 +43,7 @@ async fn main() -> Result<(), Error> {
             .await?;
 
         if response.status() == StatusCode::NOT_MODIFIED {
-            log::info!("304 response, skipping...");
+            tracing::info!("304 response, skipping...");
             return Ok(());
         } else {
             let resp_headers = response.headers().clone();
@@ -57,7 +57,7 @@ async fn main() -> Result<(), Error> {
                 if let Some(mut redis) = redis {
                     match redis.set::<_, _, ()>(key, etag).await {
                         Ok(_) => {}
-                        Err(e) => log::error!("error setting redis key: {}", e),
+                        Err(e) => tracing::error!("error setting redis key: {}", e),
                     };
                 }
             };
@@ -106,7 +106,7 @@ async fn main() -> Result<(), Error> {
                 .map(|c| c.name.to_owned().replace("&amp;", "&"))
                 .collect();
 
-            log::info!("inserting: {} - {} - {}", guid, title, link);
+            tracing::info!("inserting: {} - {} - {}", guid, title, link);
             let added = prisma_client
                 .posts()
                 .upsert(

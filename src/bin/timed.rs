@@ -3,18 +3,18 @@ use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
     config::get_application_config,
-    log::init_logger,
     prisma::{
         self, posts,
         read_filters::{DateTimeFilter, DateTimeNullableFilter},
         trigger_ids,
     },
+    tracing::init_logger,
 };
 use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logger();
+    init_logger("timed");
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
 
@@ -43,7 +43,7 @@ async fn main() -> Result<(), Error> {
 
         // TODO: audit entries export off mongo, to S3 or dynamo?
 
-        log::info!(
+        tracing::info!(
             "deleted {} posts, {} trigger ids",
             deleted_posts,
             deleted_trigger_ids
