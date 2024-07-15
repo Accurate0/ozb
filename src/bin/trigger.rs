@@ -1,3 +1,5 @@
+use std::future::IntoFuture;
+
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
@@ -11,7 +13,7 @@ use tracing::{Instrument, Level};
 use twilight_http::Client as DiscordHttpClient;
 use twilight_model::{channel::message::AllowedMentions, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
-use zephyrus::twilight_exports::ChannelMarker;
+use vesper::twilight_exports::ChannelMarker;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -70,9 +72,7 @@ async fn main() -> Result<(), Error> {
             let thumbnail = &full_document.thumbnail;
             let post_categories = &full_document.categories;
 
-            tracing::info!("[new deal] id: {}", event.payload.id);
-            tracing::info!("title: {}, {}", title, link);
-            tracing::info!("description: {}", description.replace('\n', ""));
+            tracing::info!({ title = title, link, description }, "[new deal] id: {}", event.payload.id);
 
             // todo: add regex support
             for data in active_keywords {
@@ -92,11 +92,15 @@ async fn main() -> Result<(), Error> {
 
                 let trigger_condition = title_or_description && category_matches;
 
-                tracing::info!("keyword: {}", keyword);
-                tracing::info!("keyword categories: {:?}", keyword_categories);
-                tracing::info!("post categories: {:?}", post_categories);
-                tracing::info!("title/description match: {}", title_or_description);
-                tracing::info!("category match: {}", category_matches);
+                tracing::info!({
+                        keyword_categories = ?keyword_categories,
+                        post_categories = ?post_categories,
+                        title_or_description_match = title_or_description,
+                        category_match = category_matches
+                    },
+                    "keyword: {}",
+                    keyword,
+                );
 
                 if trigger_condition {
                     tracing::info!("triggered for {} [{}]", keyword, data.user_id);
@@ -128,6 +132,8 @@ async fn main() -> Result<(), Error> {
                         .embeds(&[embed.build()])?
                         .allowed_mentions(Some(&allowed_mentions))
                         .content(&format!("<@{}>", data.user_id))?
+                        .into_future()
+                        .instrument(tracing::span!(Level::INFO, "ozb::discord::message"))
                         .await?;
 
                     prisma_client
