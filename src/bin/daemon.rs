@@ -48,12 +48,12 @@ async fn main() -> Result<(), Error> {
                 tracing::info!("304 response, skipping...");
                 return Ok(());
             } else {
-                let resp_headers = response.headers().clone();
+                let resp_headers = response.headers();
                 // update etag when content changed
                 // set etag
                 let etag = resp_headers
                     .get(ETAG)
-                    .map(|h| h.to_str().unwrap_or_default().to_owned());
+                    .map(|h| h.to_str().unwrap_or_default());
 
                 if let Some(etag) = etag {
                     if let Some(mut redis) = redis {

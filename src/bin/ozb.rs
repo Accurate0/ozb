@@ -23,7 +23,7 @@ use twilight_model::channel::message::{
 };
 use twilight_standby::Standby;
 use twilight_util::builder::InteractionResponseDataBuilder;
-use zephyrus::{
+use vesper::{
     framework::DefaultError,
     prelude::*,
     twilight_exports::{

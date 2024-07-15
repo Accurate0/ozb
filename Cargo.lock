@@ -3915,7 +3915,7 @@ dependencies = [
  "twilight-standby",
  "twilight-util",
  "uuid",
- "zephyrus",
+ "vesper",
 ]
 
 [[package]]
@@ -6952,6 +6952,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
+name = "vesper"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "655ba156802e934f417686c1503e53142ab6b352666f3e418005bd080a749d0d"
+dependencies = [
+ "async-trait",
+ "parking_lot 0.12.3",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "twilight-http",
+ "twilight-model",
+ "twilight-validate",
+ "vesper-macros",
+]
+
+[[package]]
+name = "vesper-macros"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "794d6a9dff46366f4b362029a008e383bb3f17748991d7e2dcf241237c4879bd"
+dependencies = [
+ "darling 0.20.10",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.71",
+]
+
+[[package]]
 name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7356,35 +7385,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
-]
-
-[[package]]
-name = "zephyrus"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70dddf78686a2459f229c832759c16315ca66f0ae17394cef1535f7a30dac48f"
-dependencies = [
- "async-trait",
- "parking_lot 0.12.3",
- "thiserror",
- "tokio",
- "tracing",
- "twilight-http",
- "twilight-model",
- "twilight-validate",
- "zephyrus-macros",
-]
-
-[[package]]
-name = "zephyrus-macros"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58cad02865acfde2368ce15114cb06a9afbd4391a96ac7cff3e02edb8ed0536b"
-dependencies = [
- "darling 0.20.10",
- "proc-macro2",
- "quote",
- "syn 2.0.71",
 ]
 
 [[package]]
