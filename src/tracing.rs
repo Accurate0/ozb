@@ -4,7 +4,7 @@ use std::time::Duration;
 use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
-use opentelemetry_sdk::trace::{Config as TraceConfig, Tracer};
+use opentelemetry_sdk::trace::{BatchConfigBuilder, Config as TraceConfig, Tracer};
 use opentelemetry_sdk::Resource;
 use opentelemetry_semantic_conventions::resource::DEPLOYMENT_ENVIRONMENT;
 use opentelemetry_semantic_conventions::resource::{
@@ -45,6 +45,9 @@ pub fn external_tracer(name: &'static str) -> Tracer {
     ];
 
     let trace_config = TraceConfig::default().with_resource(Resource::new(tags));
+    let batch_config = BatchConfigBuilder::default()
+        .with_max_export_timeout(Duration::from_secs(3))
+        .build();
 
     let pipeline = opentelemetry_otlp::new_exporter()
         .http()
@@ -57,6 +60,7 @@ pub fn external_tracer(name: &'static str) -> Tracer {
         .tracing()
         .with_exporter(pipeline)
         .with_trace_config(trace_config)
+        .with_batch_config(batch_config)
         .install_batch(opentelemetry_sdk::runtime::Tokio)
         .unwrap()
 }
