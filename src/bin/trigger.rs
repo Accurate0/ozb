@@ -72,7 +72,7 @@ async fn main() -> Result<(), Error> {
             let thumbnail = &full_document.thumbnail;
             let post_categories = &full_document.categories;
 
-            tracing::info!({ title = title, link, description }, "[new deal] id: {}", event.payload.id);
+            tracing::info!({ title = title, link }, "[new deal] id: {}", event.payload.id);
 
             // todo: add regex support
             for data in active_keywords {
