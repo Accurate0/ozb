@@ -1,5 +1,4 @@
-use std::future::IntoFuture;
-
+use itertools::Itertools;
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::{
@@ -8,12 +7,18 @@ use ozb::{
     tracing::init_logger,
     types::{Categories, MongoDbPayload},
 };
+use std::{collections::HashMap, future::IntoFuture};
 use tl::{Bytes, ParserOptions};
 use tracing::{Instrument, Level};
 use twilight_http::Client as DiscordHttpClient;
 use twilight_model::{channel::message::AllowedMentions, id::Id};
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
 use vesper::twilight_exports::ChannelMarker;
+
+#[derive(Clone)]
+struct Trigger {
+    keyword_data: prisma::registered_keywords::Data,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -74,6 +79,8 @@ async fn main() -> Result<(), Error> {
 
             tracing::info!({ title = title, link }, "[new deal] id: {}", event.payload.id);
 
+            let mut channel_id_to_trigger = HashMap::<String, Vec<Trigger>>::new();
+
             // todo: add regex support
             for data in active_keywords {
                 let keyword: String = data.keyword.to_ascii_lowercase();
@@ -104,48 +111,86 @@ async fn main() -> Result<(), Error> {
 
                 if trigger_condition {
                     tracing::info!("triggered for {} [{}]", keyword, data.user_id);
-                    let embed = EmbedBuilder::default()
-                        .color(0xde935f)
-                        .title("OzBargain")
-                        .field(EmbedFieldBuilder::new("Title", title.clone()))
-                        .field(EmbedFieldBuilder::new("Link", link.clone()))
-                        .field(EmbedFieldBuilder::new("Keyword", keyword.clone()))
-                        .field(EmbedFieldBuilder::new(
-                            "Categories",
-                            post_categories.join(", "),
-                        ));
-                    let embed = if let Some(ref thumbnail) = thumbnail {
-                        embed.thumbnail(ImageSource::url(thumbnail.clone())?)
-                    } else {
-                        embed
-                    };
-
-                    let allowed_mentions = AllowedMentions {
-                        parse: vec![],
-                        users: Vec::from([Id::new(data.user_id.parse()?)]),
-                        roles: vec![],
-                        replied_user: false,
-                    };
-
-                    discord_http
-                        .create_message(Id::<ChannelMarker>::new(data.channel_id.parse()?))
-                        .embeds(&[embed.build()])?
-                        .allowed_mentions(Some(&allowed_mentions))
-                        .content(&format!("<@{}>", data.user_id))?
-                        .into_future()
-                        .instrument(tracing::span!(Level::INFO, "ozb::discord::message"))
-                        .await?;
-
-                    prisma_client
-                        .audit_entries()
-                        .create(
-                            serde_json::to_value(full_document.clone())?,
-                            serde_json::to_value(data)?,
-                            vec![],
-                        )
-                        .exec()
-                        .await?;
+                    let channel_id = data.channel_id.clone();
+                    let trigger_value = Trigger { keyword_data: data };
+                    channel_id_to_trigger
+                        .entry(channel_id)
+                        .and_modify(|v| v.push(trigger_value.clone()))
+                        .or_insert(vec![trigger_value]);
                 }
+            }
+
+            for (channel_id, trigger) in channel_id_to_trigger {
+                let pings = trigger
+                    .iter()
+                    .map(|t| t.keyword_data.user_id.clone())
+                    .unique()
+                    .collect::<Vec<_>>();
+                let keywords = trigger
+                    .iter()
+                    .map(|t| t.keyword_data.keyword.clone())
+                    .unique()
+                    .collect::<Vec<_>>();
+
+                let embed = EmbedBuilder::default()
+                    .color(0xde935f)
+                    .title("OzBargain")
+                    .field(EmbedFieldBuilder::new("Title", title.clone()))
+                    .field(EmbedFieldBuilder::new("Link", link.clone()))
+                    .field(EmbedFieldBuilder::new("Keywords", keywords.join(", ")))
+                    .field(EmbedFieldBuilder::new(
+                        "Categories",
+                        post_categories.join(", "),
+                    ));
+                let embed = if let Some(ref thumbnail) = thumbnail {
+                    embed.thumbnail(ImageSource::url(thumbnail.clone())?)
+                } else {
+                    embed
+                };
+
+                let allowed_mentions = AllowedMentions {
+                    parse: vec![],
+                    users: pings
+                        .iter()
+                        .map(|id| Id::new(id.parse().unwrap()))
+                        .collect(),
+                    roles: vec![],
+                    replied_user: false,
+                };
+
+                let maybe_err = discord_http
+                    .create_message(Id::<ChannelMarker>::new(channel_id.parse()?))
+                    .embeds(&[embed.build()])?
+                    .allowed_mentions(Some(&allowed_mentions))
+                    .content(
+                        &pings
+                            .iter()
+                            .map(|id| format!("<@{}>", id))
+                            .collect::<Vec<_>>()
+                            .join(" "),
+                    )?
+                    .into_future()
+                    .instrument(tracing::span!(Level::INFO, "ozb::discord::message"))
+                    .await;
+
+                if let Err(e) = maybe_err {
+                    tracing::error!("error in discord: {e}");
+                }
+
+                let keyword_data = trigger
+                    .into_iter()
+                    .map(|t| t.keyword_data)
+                    .collect::<Vec<_>>();
+
+                prisma_client
+                    .audit_entries()
+                    .create(
+                        serde_json::to_value(full_document.clone())?,
+                        serde_json::to_value(keyword_data)?,
+                        vec![],
+                    )
+                    .exec()
+                    .await?;
             }
 
             Ok::<(), Error>(())

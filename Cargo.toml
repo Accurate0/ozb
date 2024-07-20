@@ -67,6 +67,7 @@ opentelemetry-otlp = { version = "0.16.0", features = [
 opentelemetry-semantic-conventions = "0.15.0"
 opentelemetry-appender-tracing = { version = "0.4.0" }
 vesper = "0.13.0"
+itertools = "0.13.0"
 
 [features]
 prisma = []
