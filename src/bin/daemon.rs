@@ -2,6 +2,8 @@ use ::http::header::{ETAG, IF_NONE_MATCH};
 use ::http::StatusCode;
 use anyhow::Context;
 use chrono::DateTime;
+use lambda_http::{service_fn, Error};
+use lambda_runtime::LambdaEvent;
 use ozb::config::get_application_config;
 use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX};
 use ozb::http;
@@ -9,10 +11,11 @@ use ozb::prisma::{self, posts, trigger_ids};
 use ozb::tracing::init_logger;
 use ozb::{skip_option, skip_result};
 use redis::AsyncCommands;
-use std::time::Duration;
+use serde_json::Value;
+use tracing::{Instrument, Level};
 
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+async fn main() -> Result<(), Error> {
     init_logger("daemon");
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
@@ -21,7 +24,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let redis = &client.get_connection_manager().await.ok();
     let key = &format!("{}_{}", REDIS_KEY_PREFIX, "ETAG");
 
-    let fut = move || {
+    lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| {
         async move {
             let redis = redis.clone();
             let etag: Option<String> = match redis.clone() {
@@ -138,15 +141,11 @@ async fn main() -> Result<(), anyhow::Error> {
                     .await?;
             }
 
-            Ok::<(), anyhow::Error>(())
+            Ok::<(), Error>(())
         }
-    };
+        .instrument(tracing::span!(parent: None, Level::INFO, "ozb::check"))
+    }))
+    .await?;
 
-    loop {
-        if let Err(e) = fut().await {
-            tracing::error!("{e}")
-        }
-
-        tokio::time::sleep(Duration::from_secs(60 * 3)).await;
-    }
+    Ok(())
 }
