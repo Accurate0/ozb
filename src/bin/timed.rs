@@ -1,6 +1,4 @@
 use chrono::Days;
-use lambda_http::{service_fn, Error};
-use lambda_runtime::LambdaEvent;
 use ozb::{
     config::get_application_config,
     prisma::{
@@ -10,15 +8,15 @@ use ozb::{
     },
     tracing::init_logger,
 };
-use serde_json::Value;
+use std::time::Duration;
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), anyhow::Error> {
     init_logger("timed");
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
 
-    lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| async move {
+    let fut = move || async move {
         // keep last 2 weeks of content, anything less than should be removed
         // matches how long logs are kept
         let datetime_2_weeks_ago = chrono::Utc::now()
@@ -49,8 +47,14 @@ async fn main() -> Result<(), Error> {
             deleted_trigger_ids
         );
 
-        Ok::<(), Error>(())
-    }))
-    .await?;
-    Ok(())
+        Ok::<(), anyhow::Error>(())
+    };
+
+    loop {
+        if let Err(e) = fut().await {
+            tracing::error!("{e}")
+        }
+
+        tokio::time::sleep(Duration::from_secs(60 * 3)).await;
+    }
 }

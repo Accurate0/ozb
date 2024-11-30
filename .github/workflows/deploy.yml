@@ -55,8 +55,6 @@ jobs:
       matrix:
         task:
           - Trigger
-          - Timed
-          - Daemon
 
     steps:
       - name: configure oicd aws credentials

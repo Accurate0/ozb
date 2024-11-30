@@ -3,7 +3,29 @@ services:
   ozb-bot:
     build:
       context: .
+      args:
+        - BINARY_NAME=ozb
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
     container_name: ozb-bot
+
+  ozb-daemon:
+    build:
+      context: .
+      args:
+        - BINARY_NAME=daemon
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+    container_name: ozb-daemon
+
+  ozb-timed:
+    build:
+      context: .
+      args:
+        - BINARY_NAME=timed
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+    container_name: ozb-timed
