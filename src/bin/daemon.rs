@@ -16,7 +16,7 @@ use tracing::{Instrument, Level};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logger("daemon");
+    init_logger();
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
     let http_client = &http::get_default_http_client();

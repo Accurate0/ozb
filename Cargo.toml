@@ -5,11 +5,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.86"
-fern = "0.6.2"
-futures = "0.3.30"
-serde = "1.0.204"
-tokio = { version = "1.38.0", features = ["rt", "macros", "rt-multi-thread"] }
+anyhow = "1.0.94"
+fern = "0.7.0"
+futures = "0.3.31"
+serde = "1.0.215"
+tokio = { version = "1.42.0", features = ["rt", "macros", "rt-multi-thread"] }
 twilight-cache-inmemory = "0.15.4"
 twilight-gateway = "0.15"
 twilight-http = "0.15"
@@ -20,24 +20,24 @@ twilight-util = { version = "0.15.4", features = ["builder"] }
 reqwest = { version = "0.12", features = ["json", "gzip", "native-tls"] }
 # https://github.com/open-telemetry/opentelemetry-rust/blob/main/Cargo.toml
 reqwest_old = { package = "reqwest", version = "0.11", features = ["json", "gzip", "native-tls"] }
-reqwest-middleware = { version = "0.3.2", features = ["json"] }
-reqwest-retry = "0.6.0"
+reqwest-middleware = { version = "0.4.0", features = ["json"] }
+reqwest-retry = "0.7.0"
 reqwest-tracing = { version = "0.5", features = ["opentelemetry_0_23"] }
 http = "1"
-serde_json = "1.0.120"
-redis = { version = "0.25.4", features = [
+serde_json = "1.0.133"
+redis = { version = "0.27.6", features = [
     "aio",
     "tokio-comp",
     "tokio-rustls-comp",
     "connection-manager",
 ] }
-aws-sdk-secretsmanager = "1.39.0"
-aws-sdk-dynamodb = "1.38.0"
-serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+0_24"] }
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
-config = "0.14.0"
-rss = "2.0.8"
+aws-sdk-secretsmanager = "1.54.0"
+aws-sdk-dynamodb = "1.55.0"
+serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+config = "0.14.1"
+rss = "2.0.11"
 prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.11", features = [
     "mongodb",
 ] }
@@ -45,27 +45,27 @@ prisma-client-rust-cli = { git = "https://github.com/Brendonovich/prisma-client-
     "mongodb",
 ] }
 chrono = "0.4.38"
-lambda_runtime = "0.12.0"
-lambda_http = "0.12.0"
-chrono-tz = "0.9.0"
+lambda_runtime = "0.13.0"
+lambda_http = "0.13.0"
+chrono-tz = "0.10.0"
 tl = "0.7.8"
 strum = { version = "0.26", features = ["derive"] }
 strum_macros = "0.26"
-uuid = { version = "1.10.0", features = ["v4"] }
-async-trait = "0.1.81"
-aws-config = "1.5.4"
-opentelemetry = "0.23.0"
-opentelemetry_sdk = { version = "0.23.0", features = ["rt-tokio"] }
-opentelemetry-stdout = { version = "0.4.0", features = ["trace"] }
-tracing-opentelemetry = "0.24.0"
-opentelemetry-otlp = { version = "0.16.0", features = [
+uuid = { version = "1.11.0", features = ["v4"] }
+async-trait = "0.1.83"
+aws-config = "1.5.10"
+opentelemetry = "0.27.1"
+opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio"] }
+opentelemetry-stdout = { version = "0.27.0", features = ["trace"] }
+tracing-opentelemetry = "0.28.0"
+opentelemetry-otlp = { version = "0.27.0", features = [
     "http-proto",
     "reqwest-client",
     "logs",
     "reqwest-rustls",
 ] }
-opentelemetry-semantic-conventions = "0.15.0"
-opentelemetry-appender-tracing = { version = "0.4.0" }
+opentelemetry-semantic-conventions = "0.27.0"
+opentelemetry-appender-tracing = { version = "0.27.0" }
 vesper = "0.13.0"
 itertools = "0.13.0"
 

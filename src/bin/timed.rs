@@ -14,7 +14,7 @@ use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logger("timed");
+    init_logger();
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
 

@@ -22,7 +22,7 @@ struct Trigger {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logger("trigger");
+    init_logger();
     let config = get_application_config().await?;
     let discord_http = &DiscordHttpClient::new(config.discord_token.to_owned());
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;

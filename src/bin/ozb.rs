@@ -376,7 +376,7 @@ async fn handle_event(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    init_logger("bot");
+    init_logger();
 
     let config = get_application_config().await?;
     run_discord_bot(config).await?;
