@@ -15,12 +15,6 @@ spec:
       labels:
         app: ozb
     spec:
-      securityContext:
-        fsGroup: 10001
-      volumes:
-        - name: ozb-volume
-          persistentVolumeClaim:
-            claimName: ozb
       containers:
         - name: ozb
           image: ghcr.io/accurate0/ozb-bot:latest
@@ -28,5 +22,3 @@ spec:
           envFrom:
             - secretRef:
                 name: ozb-managed-secrets
-          ports:
-            - containerPort: 8000
