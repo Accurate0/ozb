@@ -15,6 +15,11 @@ spec:
       labels:
         app: ozb
     spec:
+      tolerations:
+        - key: "group"
+          operator: "Equal"
+          value: "external"
+          effect: "NoSchedule"
       containers:
         - name: ozb
           image: ghcr.io/accurate0/ozb-bot:latest
