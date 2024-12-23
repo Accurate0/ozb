@@ -60,7 +60,7 @@ jobs:
           push: true
           tags: ghcr.io/accurate0/maccas-${{ matrix.apps }}:latest,ghcr.io/accurate0/ozb-${{ matrix.apps }}:${{ github.sha }}
           build-args: |
-            BINARY_NAME=${{ matrix.apps }}
+            BINARY_NAME=ozb-${{ matrix.apps }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
 
