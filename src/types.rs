@@ -10,9 +10,6 @@ pub struct ApplicationConfig {
 
     #[serde(alias = "mongodbconnectionstring")]
     pub mongodb_connection_string: String,
-
-    #[serde(alias = "redisconnectionstring")]
-    pub redis_connection_string: String,
 }
 
 #[derive(Debug)]

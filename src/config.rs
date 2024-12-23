@@ -1,12 +1,12 @@
 use crate::{source::SecretsManagerSource, types::ApplicationConfig};
 use aws_config::{
-    environment::EnvironmentVariableRegionProvider, retry::RetryConfig, BehaviorVersion,
+    environment::EnvironmentVariableCredentialsProvider, retry::RetryConfig, BehaviorVersion,
 };
 use config::{Config, Environment};
 
 pub async fn get_application_config() -> Result<ApplicationConfig, anyhow::Error> {
     let shared_config = aws_config::defaults(BehaviorVersion::v2024_03_28())
-        .credentials_provider(EnvironmentVariableRegionProvider::new())
+        .credentials_provider(EnvironmentVariableCredentialsProvider::new())
         .region("ap-southeast-2")
         .retry_config(RetryConfig::standard())
         .load()

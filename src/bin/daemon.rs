@@ -1,16 +1,13 @@
-use ::http::header::{ETAG, IF_NONE_MATCH};
-use ::http::StatusCode;
 use anyhow::Context;
 use chrono::DateTime;
 use lambda_http::{service_fn, Error};
 use lambda_runtime::LambdaEvent;
 use ozb::config::get_application_config;
-use ozb::constants::cfg::{OZB_RSS_DEALS_URL, REDIS_KEY_PREFIX};
+use ozb::constants::cfg::OZB_RSS_DEALS_URL;
 use ozb::http;
 use ozb::prisma::{self, posts, trigger_ids};
 use ozb::tracing::init_logger;
 use ozb::{skip_option, skip_result};
-use redis::AsyncCommands;
 use serde_json::Value;
 use tracing::{Instrument, Level};
 
@@ -20,50 +17,10 @@ async fn main() -> Result<(), Error> {
     let config = get_application_config().await?;
     let prisma_client = &prisma::new_client_with_url(&config.mongodb_connection_string).await?;
     let http_client = &http::get_default_http_client();
-    let client = redis::Client::open(config.redis_connection_string.clone())?;
-    let redis = &client.get_connection_manager().await.ok();
-    let key = &format!("{}_{}", REDIS_KEY_PREFIX, "ETAG");
 
     lambda_runtime::run(service_fn(move |_: LambdaEvent<Value>| {
         async move {
-            let redis = redis.clone();
-            let etag: Option<String> = match redis.clone() {
-                Some(mut redis) => match redis.get(key).await {
-                    Ok(value) => value,
-                    Err(e) => {
-                        tracing::error!("error getting redis key: {}", e);
-                        None
-                    }
-                },
-                None => None,
-            };
-
-            let response = http_client
-                .get(OZB_RSS_DEALS_URL)
-                .header(IF_NONE_MATCH, etag.unwrap_or_default())
-                .send()
-                .await?;
-
-            if response.status() == StatusCode::NOT_MODIFIED {
-                tracing::info!("304 response, skipping...");
-                return Ok(());
-            } else {
-                let resp_headers = response.headers();
-                // update etag when content changed
-                // set etag
-                let etag = resp_headers
-                    .get(ETAG)
-                    .map(|h| h.to_str().unwrap_or_default());
-
-                if let Some(etag) = etag {
-                    if let Some(mut redis) = redis {
-                        match redis.set::<_, _, ()>(key, etag).await {
-                            Ok(_) => {}
-                            Err(e) => tracing::error!("error setting redis key: {}", e),
-                        };
-                    }
-                };
-            }
+            let response = http_client.get(OZB_RSS_DEALS_URL).send().await?;
 
             let response = response.bytes().await?;
             let channel = rss::Channel::read_from(&response[..])?;
