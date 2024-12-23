@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  ozb-discord-bot:
+    depends_on:
+      - db
+    build:
+      dockerfile: Dockerfile
+      args:
+        - BINARY_NAME=ozb-discord-bot
+    environment:
+      - DATABASE_URL
+      - DISCORD_TOKEN
+
+  ozb-trigger:
+    depends_on:
+      - db
+    build:
+      dockerfile: Dockerfile
+      args:
+        - BINARY_NAME=ozb-trigger
+    environment:
+      - DATABASE_URL
+      - DISCORD_TOKEN
+
+  ozb-finder:
+    depends_on:
+      - db
+    build:
+      dockerfile: Dockerfile
+      args:
+        - BINARY_NAME=ozb-finder
+    environment:
+      - DATABASE_URL
+      - DISCORD_TOKEN
+
+volumes:
+  pgdata:

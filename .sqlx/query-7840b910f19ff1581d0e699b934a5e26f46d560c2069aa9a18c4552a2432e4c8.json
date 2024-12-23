@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT r.* FROM registered_keywords AS r JOIN discord_users AS du ON r.discord_user_id = du.id WHERE du.discord_id = $1\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "keyword",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "discord_user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "discord_notification_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "categories",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "7840b910f19ff1581d0e699b934a5e26f46d560c2069aa9a18c4552a2432e4c8"
+}

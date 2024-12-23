@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ozb-discord-bot
+  namespace: ozbargain
+  annotations:
+    secrets.infisical.com/auto-reload: "true"
+spec:
+  selector:
+    matchLabels:
+      app: ozb-discord-bot
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ozb-discord-bot
+    spec:
+      containers:
+        - name: ozb-discord-bot
+          image: ozb-discord-bot:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: ozb-managed-secrets

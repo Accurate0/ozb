@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ozbargain_id FROM ozbargain_posts WHERE ozbargain_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "ozbargain_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "a3c00f57febde5fdd96e5be4d3d5a28fd41598756dfbb68fdd6e5b7da1b31951"
+}

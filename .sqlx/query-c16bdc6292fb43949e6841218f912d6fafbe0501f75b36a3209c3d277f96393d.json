@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM registered_keywords WHERE id = $1 RETURNING keyword",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "keyword",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c16bdc6292fb43949e6841218f912d6fafbe0501f75b36a3209c3d277f96393d"
+}

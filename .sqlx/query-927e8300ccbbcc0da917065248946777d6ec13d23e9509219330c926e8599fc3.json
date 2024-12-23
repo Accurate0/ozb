@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT rk.*, du.discord_id, dn.channel_id FROM registered_keywords as rk\n                JOIN discord_users AS du on rk.discord_user_id = du.id\n                JOIN discord_notifications AS dn on rk.discord_notification_id = dn.id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "keyword",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "discord_user_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "discord_notification_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "categories",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "discord_id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "channel_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "927e8300ccbbcc0da917065248946777d6ec13d23e9509219330c926e8599fc3"
+}

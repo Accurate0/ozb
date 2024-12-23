@@ -1,28 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ozb
-  namespace: ozb
+  name: ozb-finder
+  namespace: ozbargain
   annotations:
     secrets.infisical.com/auto-reload: "true"
 spec:
   selector:
     matchLabels:
-      app: ozb
+      app: ozb-finder
   replicas: 1
   template:
     metadata:
       labels:
-        app: ozb
+        app: ozb-finder
     spec:
-      tolerations:
-        - key: "group"
-          operator: "Equal"
-          value: "external"
-          effect: "NoSchedule"
       containers:
-        - name: ozb
-          image: ghcr.io/accurate0/ozb-bot:latest
+        - name: ozb-finder
+          image: ozb-finder:latest
           imagePullPolicy: Always
           envFrom:
             - secretRef:

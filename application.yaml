@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ozb
+  name: ozbargain
   namespace: argocd
 spec:
   syncPolicy:
@@ -11,11 +11,15 @@ spec:
   source:
     repoURL: https://github.com/Accurate0/ozb.git
     path: kubernetes
-    directory:
-      include: "*.yaml"
+    kustomize:
+      images:
+        - ozb-discord-bot=ghcr.io/accurate0/ozb-discord-bot:${ARGOCD_APP_REVISION}
+        - ozb-trigger=ghcr.io/accurate0/ozb-trigger:${ARGOCD_APP_REVISION}
+        - ozb-finder=ghcr.io/accurate0/ozb-finder:${ARGOCD_APP_REVISION}
+
   destination:
     server: https://kubernetes.default.svc
-    namespace: ozb
+    namespace: ozbargain
 operation:
   initiatedBy:
     username: github-actions

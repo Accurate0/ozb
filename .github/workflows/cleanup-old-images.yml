@@ -23,15 +23,17 @@ jobs:
       - name: Fetch multi-platform package version SHAs
         id: multi-arch-digests
         run: |
-          image=$(docker manifest inspect ghcr.io/accurate0/ozb-bot | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
-          echo "multi-arch-digests=$image" >> $GITHUB_OUTPUT
+          bot=$(docker manifest inspect ghcr.io/accurate0/ozb-discord-bot | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
+          finder=$(docker manifest inspect ghcr.io/accurate0/ozb-finder | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
+          trigger=$(docker manifest inspect ghcr.io/accurate0/ozb-trigger | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
+          echo "multi-arch-digests=$bot,$finder,$trigger" >> $GITHUB_OUTPUT
 
       - uses: snok/container-retention-policy@v3.0.0
         with:
           account: user
           token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "ozb-bot"
+          image-names: "ozb-discord-bot ozb-finder ozb-trigger"
           image-tags: "!latest"
-          keep-n-most-recent: 3
+          keep-n-most-recent: 10
           cut-off: 3d
           skip-shas: ${{ steps.multi-arch-digests.outputs.multi-arch-digests }}

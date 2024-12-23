@@ -1,19 +1,12 @@
 use anyhow::Context;
 use futures::FutureExt;
-use ozb::config::get_application_config;
-use ozb::tracing::init_logger;
-use ozb::{
-    prisma::{
-        self,
-        read_filters::StringFilter,
-        registered_keywords::{self, UniqueWhereParam, WhereParam},
-    },
-    types::{ApplicationConfig, BotContext, Categories},
-};
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
 use std::{error::Error, sync::Arc};
-use strum::EnumProperty;
-use strum::IntoEnumIterator;
-use tracing::instrument;
+use tracing::{instrument, Level};
+use tracing_subscriber::filter::Targets;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Event, EventType, Intents, Shard, ShardId};
 use twilight_http::Client as DiscordHttpClient;
@@ -32,6 +25,11 @@ use vesper::{
         InteractionType,
     },
 };
+
+struct BotContext {
+    pool: Pool<Postgres>,
+    standby: Standby,
+}
 
 #[error_handler]
 async fn handle_interaction_error(_ctx: &SlashContext<Arc<BotContext>>, error: DefaultError) {
@@ -58,7 +56,6 @@ async fn handle_register_keywords(
         )
         .await?;
 
-    let prisma_client = &ctx.data.prisma_client;
     let interaction = &ctx.interaction;
     let discord_id = interaction
         .author_id()
@@ -72,23 +69,27 @@ async fn handle_register_keywords(
         .id
         .to_string();
 
-    let categories = Categories::iter();
-    let option_count = categories.len();
+    let queried_categories = sqlx::query!("SELECT id, name, emoji FROM categories")
+        .fetch_all(&ctx.data.pool)
+        .await?;
+
+    let option_count = queried_categories.len();
     let uuid = uuid::Uuid::new_v4().as_hyphenated().to_string();
     let modal = SelectMenu {
         custom_id: uuid.clone(),
         disabled: false,
         max_values: Some(option_count as u8),
         min_values: Some(1),
-        options: categories
+        options: queried_categories
+            .iter()
             .map(|c| SelectMenuOption {
                 default: false,
                 description: None,
                 emoji: Some(ReactionType::Unicode {
-                    name: c.get_str("emoji").unwrap_or_default().to_string(),
+                    name: c.emoji.to_owned(),
                 }),
-                label: c.to_string(),
-                value: c.to_string(),
+                label: c.name.to_owned(),
+                value: c.id.to_string(),
             })
             .collect(),
         placeholder: Some("Select categories".to_owned()),
@@ -133,29 +134,60 @@ async fn handle_register_keywords(
         _ => return Err(anyhow::Error::msg("this should not happen").into()),
     };
 
-    let categories = if values.iter().any(|v| *v == Categories::All.to_string()) {
-        vec![Categories::All.to_string()]
+    let categories = if values.iter().any(|v| *v == "1") {
+        vec![1]
     } else {
         values
+            .into_iter()
+            .flat_map(|v| -> Result<i32, anyhow::Error> { Ok(v.parse()?) })
+            .collect()
     };
 
-    prisma_client
-        .registered_keywords()
-        .create(
-            keyword.clone(),
-            discord_id,
-            channel_id,
-            vec![registered_keywords::categories::set(categories.clone())],
-        )
-        .exec()
-        .await?;
+    let named_categories = categories
+        .iter()
+        .filter_map(|id| -> Option<_> {
+            queried_categories
+                .iter()
+                .find(|c| *id == c.id)
+                .map(|c| c.name.to_owned())
+        })
+        .collect::<Vec<_>>();
+
+    let mut transaction = ctx.data.pool.begin().await?;
+    let owner_id = sqlx::query!(
+        r#"
+        INSERT INTO discord_users(discord_id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id
+        "#,
+        discord_id
+    )
+    .fetch_one(&mut *transaction)
+    .await?;
+
+    let discord_notification_id = sqlx::query!(
+        "INSERT INTO discord_notifications (channel_id) VALUES ($1) returning id",
+        channel_id
+    )
+    .fetch_one(&mut *transaction)
+    .await?;
+
+    sqlx::query!(
+        "INSERT INTO registered_keywords (keyword, discord_user_id, discord_notification_id, categories) VALUES ($1, $2, $3, $4)",
+        keyword,
+        owner_id.id,
+        discord_notification_id.id,
+        &named_categories
+    )
+    .execute(&mut *transaction)
+    .await?;
+
+    transaction.commit().await?;
 
     ctx.interaction_client
         .update_response(&ctx.interaction.token)
         .content(Some(&format!(
             "Registered \"{}\" as keyword for search with categories: {}",
             keyword,
-            categories.join(", ")
+            named_categories.join(", ")
         )))?
         .components(None)?
         .await?;
@@ -168,34 +200,23 @@ async fn autocomplete_existing_keywords(
     ctx: AutocompleteContext<Arc<BotContext>>,
 ) -> Option<InteractionResponseData> {
     let discord_id = ctx.interaction.author_id()?.to_string();
-    let channel_id = ctx.interaction.channel.as_ref().map(|c| c.id)?.to_string();
 
-    let choices = ctx
-        .data
-        .prisma_client
-        .registered_keywords()
-        .find_many(vec![
-            WhereParam::UserId(StringFilter::Equals(discord_id)),
-            WhereParam::ChannelId(StringFilter::Equals(channel_id)),
-        ])
-        .exec()
-        .await
-        .ok()?
-        .iter()
-        .map(|item| CommandOptionChoice {
-            name: format!(
-                "{} ({})",
-                item.keyword.clone(),
-                if item.categories.is_empty() {
-                    Categories::All.to_string()
-                } else {
-                    item.categories.join(", ")
-                },
-            ),
-            name_localizations: None,
-            value: CommandOptionChoiceValue::String(item.id.clone()),
-        })
-        .collect();
+    let choices = sqlx::query!(
+        r#"
+        SELECT r.* FROM registered_keywords AS r JOIN discord_users AS du ON r.discord_user_id = du.id WHERE du.discord_id = $1
+    "#,
+        discord_id
+    )
+    .fetch_all(&ctx.data.pool)
+    .await
+    .ok()?
+    .iter()
+    .map(|item| CommandOptionChoice {
+        name: item.keyword.clone(),
+        name_localizations: None,
+        value: CommandOptionChoiceValue::String(item.id.to_string()),
+    })
+    .collect();
 
     Some(InteractionResponseData {
         choices: Some(choices),
@@ -211,15 +232,8 @@ async fn handle_unregister_keywords(
     ctx: &SlashContext<Arc<BotContext>>,
     #[autocomplete(autocomplete_existing_keywords)]
     #[description = "what u want"]
-    // todo: fix this, it can be any option id, regardless of who placed it
-    // but that requires knowing the db key (good for me?)
-    option_id: String,
+    selection: String,
 ) -> DefaultCommandResult {
-    let discord_id = ctx
-        .interaction
-        .author_id()
-        .context("missing author id")?
-        .to_string();
     let response = InteractionResponseDataBuilder::default().flags(MessageFlags::EPHEMERAL);
     ctx.interaction_client
         .create_response(
@@ -232,45 +246,30 @@ async fn handle_unregister_keywords(
         )
         .await?;
 
-    let prisma_client = &ctx.data.prisma_client;
-    let item_to_delete = prisma_client
-        .registered_keywords()
-        .find_unique(UniqueWhereParam::IdEquals(option_id.clone()))
-        .exec()
+    // TODO: fix this, it can be any option id, regardless of who placed it
+    // but that requires knowing the db key (good for me?)
+    let deleted_item = sqlx::query!(
+        "DELETE FROM registered_keywords WHERE id = $1 RETURNING keyword",
+        selection.parse::<i32>()?
+    )
+    .fetch_one(&ctx.data.pool)
+    .await?;
+
+    ctx.interaction_client
+        .update_response(&ctx.interaction.token)
+        .content(Some(&format!(
+            "Removed \"{}\" as keyword for search",
+            deleted_item.keyword
+        )))?
         .await?;
 
-    if let Some(item) = item_to_delete {
-        let deleted_item = prisma_client
-            .registered_keywords()
-            .delete(UniqueWhereParam::IdEquals(option_id))
-            .exec()
-            .await?;
-
-        if item.user_id == discord_id {
-            ctx.interaction_client
-                .update_response(&ctx.interaction.token)
-                .content(Some(&format!(
-                    "Removed \"{}\" as keyword for search",
-                    deleted_item.keyword
-                )))?
-                .await?;
-        } else {
-            ctx.interaction_client
-                .update_response(&ctx.interaction.token)
-                .content(Some("Hmmmm wyd"))?
-                .await?;
-        }
-    } else {
-        ctx.interaction_client
-            .update_response(&ctx.interaction.token)
-            .content(Some("Error :)"))?
-            .await?;
-    }
     Ok(())
 }
 
-pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Error> {
-    let discord_token = config.discord_token.clone();
+pub async fn run_discord_bot() -> Result<(), anyhow::Error> {
+    let database_url = std::env::var("DATABASE_URL")?;
+    let discord_token = std::env::var("DISCORD_TOKEN")?;
+
     let discord_http = Arc::new(DiscordHttpClient::new(discord_token.to_owned()));
     let standby = Standby::new();
     let mut shard = Shard::new(
@@ -279,13 +278,13 @@ pub async fn run_discord_bot(config: ApplicationConfig) -> Result<(), anyhow::Er
         Intents::GUILD_MESSAGES | Intents::MESSAGE_CONTENT | Intents::GUILDS,
     );
 
-    let prisma_client = prisma::new_client_with_url(&config.mongodb_connection_string).await?;
+    tracing::info!("connecting to db: {database_url}");
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await?;
 
-    let bot_context = Arc::new(BotContext {
-        config,
-        prisma_client,
-        standby,
-    });
+    let bot_context = Arc::new(BotContext { pool, standby });
 
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE | ResourceType::GUILD)
@@ -376,10 +375,12 @@ async fn handle_event(
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    init_logger();
+    tracing_subscriber::registry()
+        .with(Targets::default().with_default(Level::INFO))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
-    let config = get_application_config().await?;
-    run_discord_bot(config).await?;
+    run_discord_bot().await?;
 
     Ok(())
 }

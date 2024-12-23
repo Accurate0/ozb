@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO audit\n                            (post_id, keyword_id, user_id)\n                            VALUES\n                            ($1, $2, $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "88e451dbe555e81cead1a87f83ce1e72a69b9e96e32ce493946cdc454bda599e"
+}
