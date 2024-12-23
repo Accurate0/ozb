@@ -3,6 +3,5 @@ kind: Kustomization
 resources:
   - discord-bot.deployment.yaml
   - finder.deployment.yaml
-  - graphql
   - secret.yaml
   - trigger.deployment.yaml
