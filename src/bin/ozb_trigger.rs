@@ -27,7 +27,7 @@ async fn process_message(state: Arc<State>) -> Result<(), anyhow::Error> {
     let discord_http_client = state.get::<DiscordHttpClient>();
 
     let posts = sqlx::query!(
-        r#"SELECT * from ozbargain_posts WHERE notified = false LIMIT 1 FOR UPDATE SKIP LOCKED"#,
+        r#"SELECT * from ozbargain_posts WHERE notified = false LIMIT 10 FOR UPDATE SKIP LOCKED"#,
     )
     .fetch_all(&mut *transaction)
     .await?;
@@ -35,6 +35,7 @@ async fn process_message(state: Arc<State>) -> Result<(), anyhow::Error> {
     tracing::info!("processing: {}", posts.len());
 
     let ids = posts.iter().map(|p| p.id).collect::<Vec<_>>();
+    // notified means processed..
     sqlx::query!(
         "UPDATE ozbargain_posts SET notified = true WHERE id = ANY($1)",
         &ids
