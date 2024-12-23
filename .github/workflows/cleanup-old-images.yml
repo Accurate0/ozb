@@ -26,13 +26,14 @@ jobs:
           bot=$(docker manifest inspect ghcr.io/accurate0/ozb-discord-bot | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
           finder=$(docker manifest inspect ghcr.io/accurate0/ozb-finder | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
           trigger=$(docker manifest inspect ghcr.io/accurate0/ozb-trigger | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
-          echo "multi-arch-digests=$bot,$finder,$trigger" >> $GITHUB_OUTPUT
+          migration=$(docker manifest inspect ghcr.io/accurate0/ozb-migration | jq -r '.manifests.[] | .digest' | paste -s -d ' ' -)
+          echo "multi-arch-digests=$bot,$finder,$trigger,$migration" >> $GITHUB_OUTPUT
 
       - uses: snok/container-retention-policy@v3.0.0
         with:
           account: user
           token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "ozb-discord-bot ozb-finder ozb-trigger"
+          image-names: "ozb-discord-bot ozb-finder ozb-trigger ozb-migration"
           image-tags: "!latest"
           keep-n-most-recent: 10
           cut-off: 3d
