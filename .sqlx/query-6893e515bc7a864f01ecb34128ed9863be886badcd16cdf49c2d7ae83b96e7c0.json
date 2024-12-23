@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO ozbargain_posts\n                    (title,\n                     description,\n                     thumbnail,\n                     link,\n                     ozbargain_id,\n                     publication_date,\n                     notified)\n                    VALUES ($1, $2, $3, $4, $5, $6, false)\n                    ON CONFLICT (ozbargain_id) DO NOTHING\n                    RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamp"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6893e515bc7a864f01ecb34128ed9863be886badcd16cdf49c2d7ae83b96e7c0"
+}

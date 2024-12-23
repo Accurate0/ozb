@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT * from ozbargain_posts WHERE notified = false LIMIT 5 FOR UPDATE SKIP LOCKED",
+  "query": "SELECT * from ozbargain_posts WHERE notified = false LIMIT 1 FOR UPDATE SKIP LOCKED",
   "describe": {
     "columns": [
       {
@@ -64,5 +64,5 @@
       false
     ]
   },
-  "hash": "7085e771133f2effb16e208a55ea67128714b793d92ad4158162e4023031626d"
+  "hash": "8353788fd28892577d5e4b171e10790a23c3482e320924d0e1de1332e1f279ad"
 }

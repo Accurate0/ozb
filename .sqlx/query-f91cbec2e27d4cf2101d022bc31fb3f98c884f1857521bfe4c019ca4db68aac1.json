@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE ozbargain_posts SET notified = true WHERE id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f91cbec2e27d4cf2101d022bc31fb3f98c884f1857521bfe4c019ca4db68aac1"
+}
