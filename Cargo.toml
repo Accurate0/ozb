@@ -39,7 +39,6 @@ path = "src/bin/ozb_discord_bot.rs"
 name = "ozb-trigger"
 path = "src/bin/ozb_trigger.rs"
 
-
 [[bin]]
 name = "ozb-migration"
 path = "src/bin/ozb_migration.rs"
