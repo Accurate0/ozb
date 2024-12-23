@@ -25,6 +25,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let database_url = std::env::var("DATABASE_URL")?;
     let mongodb_connection_string = std::env::var("MONGODB_CONNECTION_STRING")?;
 
+    tracing::info!("connecting to mongodb: {mongodb_connection_string}");
     let mut client_options = ClientOptions::parse(mongodb_connection_string).await?;
     let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
     client_options.server_api = Some(server_api);
