@@ -17,7 +17,7 @@ services:
       args:
         - BINARY_NAME=ozb-discord-bot
     environment:
-      - DATABASE_URL
+      - DATABASE_URL=postgres://postgres:password@db/finder
       - DISCORD_TOKEN
 
   ozb-trigger:
@@ -28,7 +28,7 @@ services:
       args:
         - BINARY_NAME=ozb-trigger
     environment:
-      - DATABASE_URL
+      - DATABASE_URL=postgres://postgres:password@db/finder
       - DISCORD_TOKEN
 
   ozb-finder:
@@ -39,7 +39,7 @@ services:
       args:
         - BINARY_NAME=ozb-finder
     environment:
-      - DATABASE_URL
+      - DATABASE_URL=postgres://postgres:password@db/finder
       - DISCORD_TOKEN
 
 volumes:
