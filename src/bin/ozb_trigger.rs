@@ -166,12 +166,15 @@ async fn process_message(state: Arc<State>) -> Result<(), anyhow::Error> {
             replied_user: false,
         };
 
-        discord_http_client
+        if let Err(e) = discord_http_client
             .create_message(Id::<ChannelMarker>::new(channel_id.parse()?))
             .embeds(&[embed.build()])?
             .allowed_mentions(Some(&allowed_mentions))
             .content(&format!("<@{}>", user_id))?
-            .await?;
+            .await
+        {
+            tracing::error!("error sending notif: {e}");
+        };
 
         tracing::info!("discord: notification sent {} {}", channel_id, user_id);
 
