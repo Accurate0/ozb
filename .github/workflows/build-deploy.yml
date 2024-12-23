@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        apps: [discord-bot, finder, trigger]
+        apps: [discord-bot, finder, trigger, migration]
 
     permissions:
       packages: write

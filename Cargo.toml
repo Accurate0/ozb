@@ -24,6 +24,8 @@ twilight-gateway = "0.15.4"
 twilight-standby = "0.15.4"
 uuid = { version = "1.11.0", features = ["v4"] }
 vesper = "0.13.0"
+mongodb = "3.1.1"
+serde = "1.0.216"
 
 [[bin]]
 name = "ozb-finder"
@@ -36,3 +38,8 @@ path = "src/bin/ozb_discord_bot.rs"
 [[bin]]
 name = "ozb-trigger"
 path = "src/bin/ozb_trigger.rs"
+
+
+[[bin]]
+name = "ozb-migration"
+path = "src/bin/ozb_migration.rs"

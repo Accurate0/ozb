@@ -154,10 +154,15 @@ async fn handle_register_keywords(
         .collect::<Vec<_>>();
 
     let mut transaction = ctx.data.pool.begin().await?;
-    let owner_id = sqlx::query!(
-        r#"
-        INSERT INTO discord_users(discord_id) VALUES ($1) ON CONFLICT DO NOTHING RETURNING id
-        "#,
+    sqlx::query!(
+        "INSERT INTO discord_users(discord_id) VALUES ($1) ON CONFLICT DO NOTHING",
+        discord_id
+    )
+    .execute(&mut *transaction)
+    .await?;
+
+    let discord_user_id = sqlx::query!(
+        "SELECT id FROM discord_users WHERE discord_id = $1",
         discord_id
     )
     .fetch_one(&mut *transaction)
@@ -173,7 +178,7 @@ async fn handle_register_keywords(
     sqlx::query!(
         "INSERT INTO registered_keywords (keyword, discord_user_id, discord_notification_id, categories) VALUES ($1, $2, $3, $4)",
         keyword,
-        owner_id.id,
+        discord_user_id.id,
         discord_notification_id.id,
         &named_categories
     )

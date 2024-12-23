@@ -15,6 +15,14 @@ spec:
       labels:
         app: ozb-discord-bot
     spec:
+      initContainers:
+        - name: ozb-migration
+          image: ozb-migration:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: ozb-managed-secrets
+
       containers:
         - name: ozb-discord-bot
           image: ozb-discord-bot:latest
