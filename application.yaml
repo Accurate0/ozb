@@ -16,6 +16,7 @@ spec:
         - ozb-discord-bot=ghcr.io/accurate0/ozb-discord-bot:${ARGOCD_APP_REVISION}
         - ozb-trigger=ghcr.io/accurate0/ozb-trigger:${ARGOCD_APP_REVISION}
         - ozb-finder=ghcr.io/accurate0/ozb-finder:${ARGOCD_APP_REVISION}
+        - ozb-migration=ghcr.io/accurate0/ozb-migration:${ARGOCD_APP_REVISION}
 
   destination:
     server: https://kubernetes.default.svc
