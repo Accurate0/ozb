@@ -7,12 +7,14 @@ use tracing::{instrument, Level};
 use tracing_subscriber::filter::Targets;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use twilight_cache_inmemory::{InMemoryCache, ResourceType};
-use twilight_gateway::{Event, EventType, Intents, Shard, ShardId};
+use twilight_cache_inmemory::{DefaultCacheModels, InMemoryCache, ResourceType};
+use twilight_gateway::{Event, EventType, EventTypeFlags, Intents, Shard, ShardId, StreamExt};
 use twilight_http::Client as DiscordHttpClient;
+use twilight_model::channel::message::component::SelectMenuType;
+use twilight_model::channel::message::EmojiReactionType;
 use twilight_model::channel::message::{
     component::{SelectMenu, SelectMenuOption},
-    MessageFlags, ReactionType,
+    MessageFlags,
 };
 use twilight_standby::Standby;
 use twilight_util::builder::InteractionResponseDataBuilder;
@@ -77,21 +79,26 @@ async fn handle_register_keywords(
     let uuid = uuid::Uuid::new_v4().as_hyphenated().to_string();
     let modal = SelectMenu {
         custom_id: uuid.clone(),
+        channel_types: None,
+        default_values: None,
+        kind: SelectMenuType::Text,
         disabled: false,
         max_values: Some(option_count as u8),
         min_values: Some(1),
-        options: queried_categories
-            .iter()
-            .map(|c| SelectMenuOption {
-                default: false,
-                description: None,
-                emoji: Some(ReactionType::Unicode {
-                    name: c.emoji.to_owned(),
-                }),
-                label: c.name.to_owned(),
-                value: c.id.to_string(),
-            })
-            .collect(),
+        options: Some(
+            queried_categories
+                .iter()
+                .map(|c| SelectMenuOption {
+                    default: false,
+                    description: None,
+                    emoji: Some(EmojiReactionType::Unicode {
+                        name: c.emoji.to_owned(),
+                    }),
+                    label: c.name.to_owned(),
+                    value: c.id.to_string(),
+                })
+                .collect(),
+        ),
         placeholder: Some("Select categories".to_owned()),
     };
 
@@ -102,7 +109,7 @@ async fn handle_register_keywords(
     let component_message = ctx
         .interaction_client
         .update_response(&ctx.interaction.token)
-        .components(Some(&[Component::ActionRow(action_row)]))?
+        .components(Some(&[Component::ActionRow(action_row)]))
         .await?
         .model()
         .await?;
@@ -111,7 +118,7 @@ async fn handle_register_keywords(
         .data
         .standby
         .wait_for_component(component_message.id, move |i: &Interaction| {
-            i.data.clone().map_or(false, |data| match data {
+            i.data.clone().is_some_and(|data| match data {
                 InteractionData::MessageComponent(m) => m.custom_id == uuid,
                 _ => false,
             })
@@ -193,8 +200,8 @@ async fn handle_register_keywords(
             "Registered \"{}\" as keyword for search with categories: {}",
             keyword,
             named_categories.join(", ")
-        )))?
-        .components(None)?
+        )))
+        .components(None)
         .await?;
 
     Ok(())
@@ -265,7 +272,7 @@ async fn handle_unregister_keywords(
         .content(Some(&format!(
             "Removed \"{}\" as keyword for search",
             deleted_item.keyword
-        )))?
+        )))
         .await?;
 
     Ok(())
@@ -291,7 +298,7 @@ pub async fn run_discord_bot() -> Result<(), anyhow::Error> {
 
     let bot_context = Arc::new(BotContext { pool, standby });
 
-    let cache = InMemoryCache::builder()
+    let cache = InMemoryCache::<DefaultCacheModels>::builder()
         .resource_types(ResourceType::MESSAGE | ResourceType::GUILD)
         .build();
 
@@ -313,24 +320,17 @@ pub async fn run_discord_bot() -> Result<(), anyhow::Error> {
         tracing::error!("error registering commands: {}", e);
     };
 
-    while let Ok(event) = shard.next_event().await {
+    while let Some(event) = shard.next_event(EventTypeFlags::all()).await {
+        let Ok(event) = event else {
+            let source = event.unwrap_err();
+            tracing::warn!(source = ?source, "error receiving event");
+
+            continue;
+        };
+
         cache.update(&event);
         if matches!(event.kind(), EventType::GatewayHeartbeatAck) {
             continue;
-        }
-
-        match event.guild_id() {
-            Some(guild_id) => {
-                let guild_name = match cache.guild(guild_id) {
-                    Some(g) => g.name().to_owned(),
-                    None => discord_http.guild(guild_id).await?.model().await?.name,
-                };
-
-                tracing::info!("event {:?} from server {:?}", event.kind(), guild_name);
-            }
-            None => {
-                tracing::info!("event {:?}", event.kind());
-            }
         }
 
         if matches!(event.kind(), EventType::Ready) {
