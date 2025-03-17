@@ -71,9 +71,11 @@ async fn handle_register_keywords(
         .id
         .to_string();
 
-    let queried_categories = sqlx::query!("SELECT id, name, emoji FROM categories")
+    let mut queried_categories = sqlx::query!("SELECT id, name, emoji FROM categories")
         .fetch_all(&ctx.data.pool)
         .await?;
+
+    queried_categories.sort_by_key(|r| r.name.to_owned());
 
     let option_count = queried_categories.len();
     let uuid = uuid::Uuid::new_v4().as_hyphenated().to_string();
