@@ -1,6 +1,7 @@
 use anyhow::Context;
 use ozb::ozbargain::OZB_RSS_DEALS_URL;
 use ozb::{skip_option, skip_result};
+use reqwest::header::USER_AGENT;
 use reqwest::{
     header::{ETAG, IF_NONE_MATCH},
     StatusCode,
@@ -28,13 +29,17 @@ async fn main() -> Result<(), anyhow::Error> {
 
     sqlx::migrate!("./migrations").run(&pool).await?;
 
-    let http_client = reqwest::ClientBuilder::new().build()?;
+    let http_client = reqwest::ClientBuilder::new().cookie_store(true).build()?;
 
     let mut stored_etag: Option<String> = None;
     loop {
         tracing::info!("fetching rss");
         let response = http_client
             .get(OZB_RSS_DEALS_URL)
+            .header(
+                USER_AGENT,
+                "Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0",
+            )
             .header(IF_NONE_MATCH, stored_etag.clone().unwrap_or_default())
             .send()
             .await?;
@@ -42,6 +47,10 @@ async fn main() -> Result<(), anyhow::Error> {
         if response.status() == StatusCode::NOT_MODIFIED {
             tracing::info!("304 response, skipping...");
             tracing::info!("sleeping :)");
+            tokio::time::sleep(Duration::from_secs(60)).await;
+            continue;
+        } else if response.status() == StatusCode::FORBIDDEN {
+            tracing::info!("blocked by cf");
             tokio::time::sleep(Duration::from_secs(60)).await;
             continue;
         } else {
@@ -53,7 +62,9 @@ async fn main() -> Result<(), anyhow::Error> {
             stored_etag = etag;
         }
 
+        tracing::info!("status: {}", response.status());
         let response = response.bytes().await?;
+        tracing::info!("response: {response:?}",);
         let channel = rss::Channel::read_from(&response[..])?;
 
         for item in channel.items() {
