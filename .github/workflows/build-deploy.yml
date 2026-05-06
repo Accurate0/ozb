@@ -29,7 +29,7 @@ jobs:
     uses: Accurate0/workflows/.github/workflows/deploy-app-k8s-v2.yaml@main
     with:
       service-name: ozbargain
-      images: ghcr.io/accurate0/ozb-discordbot,ghcr.io/accurate0/ozb-finder,ghcr.io/accurate0/ozb-trigger
+      images: ghcr.io/accurate0/ozb-discord-bot,ghcr.io/accurate0/ozb-finder,ghcr.io/accurate0/ozb-trigger
       manifests-path: projects/ozbargain/manifests
       tag: ${{ github.sha }}
     secrets:
